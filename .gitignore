@@ -33,9 +33,21 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
+# local database (SQLite dev) — recreate with `npx tsx prisma/seed.ts`
+*.db
+*.db-journal
+/dev.db
+/prisma/dev.db
+
+# user uploads (runtime data, not source)
+/public/uploads/*
+!/public/uploads/.gitkeep
+
 # vercel
 .vercel
 
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+/app/generated/prisma

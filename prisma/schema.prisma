@@ -1,0 +1,113 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Loja {
+  id              String   @id
+  nome            String
+  siteUrl         String
+  logoUrl         String?
+  statusAtual     String   @default("mais_tarde")
+  horarioEstimado String?
+  ordem           Int      @default(0)
+  criadoEm       DateTime @default(now())
+
+  produtos Produto[]
+  pedidos  Pedido[]
+  sessoes  SessaoAoVivo[]
+}
+
+model Produto {
+  id               String   @id @default(cuid())
+  lojaId           String
+  nome             String
+  fotoUrl          String
+  precoOriginalUSD Float
+  precoVendaBRL    Float
+  temDesconto      Boolean  @default(false)
+  qtdDisponivel    Int      @default(1)
+  status           String   @default("disponivel")
+  criadoEm        DateTime @default(now())
+
+  loja     Loja             @relation(fields: [lojaId], references: [id])
+  reservas ReservaCliente[]
+}
+
+model Pedido {
+  id                  String   @id @default(cuid())
+  clienteId           String
+  clienteNome         String
+  clienteTelefone     String
+  clienteEmail        String?
+  lojaId              String?  // opcional: pedido "geral" pode não ter loja cadastrada
+  siteUrl             String?  // link/marca colado pelo cliente quando não há loja
+  descricao           String
+  printUrl            String?
+  tipo                String   @default("geral") // 'geral' (Pedir) | 'loja' (Pedido da loja)
+  status              String   @default("pendente")
+  respostaImportadora String?
+  criadoEm           DateTime @default(now())
+  atualizadoEm       DateTime @updatedAt
+
+  loja Loja? @relation(fields: [lojaId], references: [id])
+}
+
+model SessaoAoVivo {
+  id           String   @id @default(cuid())
+  lojaId       String
+  inicioEm    DateTime @default(now())
+  fimEm       DateTime?
+  ativa        Boolean  @default(true)
+  viewersCount Int      @default(0)
+
+  loja Loja @relation(fields: [lojaId], references: [id])
+}
+
+// Uma "compra" registrada via Comprar → PIX. Estoque ilimitado: sem expiração,
+// sem trava de "quem clica primeiro". Pagamento confirmado manualmente (ou, no
+// futuro, por um app de pagamento externo).
+model ReservaCliente {
+  id              String   @id @default(cuid())
+  produtoId       String
+  clienteId       String
+  clienteNome     String
+  clienteTelefone String
+  clienteEmail    String?
+  valorBRL        Float
+  criadoEm       DateTime @default(now())
+  status          String   @default("aguardando_pix")
+
+  produto Produto @relation(fields: [produtoId], references: [id])
+}
+
+model ViewerHeartbeat {
+  id        String   @id @default(cuid())
+  clienteId String
+  timestamp DateTime @default(now())
+
+  @@index([timestamp])
+}
+
+// Próxima leva de entrega no Brasil — registro único (singleton, id fixo).
+model LevaEntrega {
+  id           String    @id
+  dataPrevista DateTime?
+  status       String    @default("a_caminho") // a_caminho | no_brasil | saiu_entrega | entregue
+  atualizadoEm DateTime  @updatedAt
+}
+
+// "Última vez que o cliente abriu cada aba" — base do pontinho de novidades.
+// Uma linha por cliente por aba.
+model VisualizacaoAba {
+  id        String   @id @default(cuid())
+  clienteId String
+  aba       String // ao_vivo | pedir | minhas_compras
+  vistoEm   DateTime @default(now())
+
+  @@unique([clienteId, aba])
+}
