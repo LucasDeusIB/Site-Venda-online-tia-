@@ -56,11 +56,11 @@ export function SessaoControl({ sessao, lojas, onUpdate }: Props) {
 
   if (sessao?.ativa) {
     return (
-      <div className="bg-[#E63946]/10 border border-[#E63946]/30 p-4">
+      <div className="bg-[#E63946]/10 rounded-xl border border-[#E63946]/30 p-4">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-[#E63946] animate-pulse-live" />
-            <p className="text-xs font-archivo font-medium tracking-widest uppercase text-[#FAFAFA]">
+            <p className="text-xs font-archivo font-medium tracking-widest uppercase text-[#0A0A0A]">
               Ao vivo — {lojaAtual?.nome ?? sessao.lojaId}
             </p>
           </div>
@@ -71,15 +71,15 @@ export function SessaoControl({ sessao, lojas, onUpdate }: Props) {
         <div className="flex gap-2">
           <button
             onClick={copiarAviso}
-            className="flex-1 flex items-center justify-center gap-2 border border-[#525252] text-[#FAFAFA] text-[10px]
-              font-archivo font-medium tracking-widest uppercase py-2.5 transition-colors hover:border-[#FAFAFA]"
+            className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-[#2D6CDF] text-[#0A0A0A] text-[10px]
+              font-archivo font-medium tracking-widest uppercase py-2.5 transition-colors hover:border-[#0A0A0A]"
           >
             {copiado ? <><Check size={12} /> Copiado!</> : <><Copy size={12} /> Copiar aviso</>}
           </button>
           <button
             onClick={encerrarSessao}
             disabled={loading}
-            className="flex items-center gap-2 border border-[#E63946]/50 text-[#E63946] text-[10px]
+            className="flex items-center gap-2 rounded-xl border border-[#E63946]/50 text-[#E63946] text-[10px]
               font-archivo font-medium tracking-widest uppercase px-4 py-2.5 transition-colors hover:border-[#E63946] disabled:opacity-50"
           >
             <ZapOff size={12} />
@@ -91,7 +91,7 @@ export function SessaoControl({ sessao, lojas, onUpdate }: Props) {
   }
 
   return (
-    <div className="border border-[#262626] p-4">
+    <div className="rounded-xl border border-[#2D6CDF] p-4">
       <p className="text-[10px] font-archivo font-medium tracking-widest uppercase text-[#525252] mb-3">
         Iniciar sessão ao vivo
       </p>
@@ -99,19 +99,19 @@ export function SessaoControl({ sessao, lojas, onUpdate }: Props) {
         <select
           value={lojaId}
           onChange={e => setLojaId(e.target.value)}
-          className="flex-1 bg-transparent border border-[#262626] text-[#FAFAFA] px-3 py-2.5 text-sm font-archivo
-            focus:outline-none focus:border-[#525252] transition-colors appearance-none cursor-pointer"
+          className="flex-1 bg-transparent rounded-xl border border-[#2D6CDF] text-[#0A0A0A] px-3 py-2.5 text-sm font-archivo
+            focus:outline-none focus:border-[#0A0A0A] transition-colors appearance-none cursor-pointer"
         >
-          <option value="" className="bg-[#0A0A0A]">Escolha a loja...</option>
+          <option value="" className="bg-white">Escolha a loja...</option>
           {lojas.map(l => (
-            <option key={l.id} value={l.id} className="bg-[#0A0A0A]">{l.nome}</option>
+            <option key={l.id} value={l.id} className="bg-white">{l.nome}</option>
           ))}
         </select>
         <button
           onClick={abrirSessao}
           disabled={!lojaId || loading}
-          className="flex items-center gap-2 bg-[#FAFAFA] text-[#0A0A0A] text-[10px] font-archivo font-medium
-            tracking-widest uppercase px-4 py-2.5 transition-all hover:bg-[#E5E5E5] disabled:opacity-30"
+          className="flex items-center gap-2 bg-[#0A0A0A] text-[#FAFAFA] text-[10px] font-archivo font-medium
+            tracking-widest uppercase px-4 py-2.5 transition-all hover:bg-[#262626] disabled:opacity-30"
         >
           <Zap size={12} />
           {loading ? '...' : 'Ao Vivo'}

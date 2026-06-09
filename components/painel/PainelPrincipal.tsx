@@ -62,7 +62,7 @@ export function PainelPrincipal() {
         <button
           onClick={handleLogout}
           className="flex items-center gap-1.5 text-[10px] font-archivo font-medium tracking-widest uppercase text-[#525252]
-            hover:text-[#FAFAFA] transition-colors"
+            hover:text-[#0A0A0A] transition-colors"
         >
           <LogOut size={14} />
           Sair
@@ -76,14 +76,16 @@ export function PainelPrincipal() {
         onUpdate={mutateSessao}
       />
 
-      {/* ABAS */}
-      <div className="flex border-b border-[#262626] mt-6 mb-6">
+      {/* ABAS — pílulas arredondadas */}
+      <div className="flex flex-wrap gap-2 mt-6 mb-6">
         {abas.map(({ key, label, badge }) => (
           <button
             key={key}
             onClick={() => setAba(key)}
-            className={`relative flex items-center gap-2 pb-3 mr-5 text-[10px] font-archivo font-medium tracking-widest uppercase
-              transition-colors ${aba === key ? 'text-[#FAFAFA] border-b border-[#FAFAFA] -mb-px' : 'text-[#525252]'}`}
+            className={`relative flex items-center gap-2 px-3.5 py-2 rounded-full border text-[10px] font-archivo font-medium tracking-widest uppercase
+              transition-colors ${aba === key
+                ? 'bg-[#0A0A0A] text-[#FAFAFA] border-[#0A0A0A]'
+                : 'text-[#525252] border-[#2D6CDF] hover:border-[#0A0A0A] hover:text-[#0A0A0A]'}`}
           >
             {label}
             {badge && badge > 0 && (

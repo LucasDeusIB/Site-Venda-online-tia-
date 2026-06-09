@@ -21,7 +21,7 @@ export function ProximaLevaBloco() {
   const temData = !!leva?.dataPrevista
 
   return (
-    <div className="border border-[#E5E5E5] p-4 mb-8">
+    <div className="rounded-xl border border-[#E63946] p-4 mb-8">
       <div className="flex items-center gap-2 mb-2">
         <Plane size={13} className="text-[#A3A3A3]" />
         <p className="text-[10px] font-archivo font-medium tracking-widest uppercase text-[#A3A3A3]">

@@ -35,6 +35,13 @@ body {
   color: #0A0A0A;
 }
 
+/* Cantos arredondados (estilo Apple) como padrão dos botões cheios que não têm
+   classe de raio própria. Pílulas (.rounded-full) e cartões (.rounded-xl/-2xl)
+   continuam vencendo por especificidade de classe utilitária. */
+button {
+  border-radius: 0.75rem;
+}
+
 .font-display {
   font-family: var(--font-display);
 }

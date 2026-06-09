@@ -22,7 +22,7 @@ const STYLES: Record<PedidoStatus, string> = {
 
 export function StatusPedidoBadge({ status }: { status: PedidoStatus }) {
   return (
-    <span className={`shrink-0 text-[9px] font-archivo font-medium tracking-widest uppercase px-2.5 py-1 ${STYLES[status]}`}>
+    <span className={`shrink-0 rounded-md text-[9px] font-archivo font-medium tracking-widest uppercase px-2.5 py-1 ${STYLES[status]}`}>
       {LABELS[status]}
     </span>
   )

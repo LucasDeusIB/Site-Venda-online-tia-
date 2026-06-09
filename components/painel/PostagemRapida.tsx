@@ -89,7 +89,7 @@ export function PostagemRapida({ lojaId, onPublicado }: Props) {
   }
 
   return (
-    <div className="border border-[#262626] p-4">
+    <div className="rounded-xl border border-[#2D6CDF] p-4">
       <p className="text-[10px] font-archivo font-medium tracking-widest uppercase text-[#525252] mb-4">
         Postagem rápida
       </p>
@@ -105,8 +105,8 @@ export function PostagemRapida({ lojaId, onPublicado }: Props) {
       />
       <div
         onClick={() => fileRef.current?.click()}
-        className="w-full aspect-[4/3] bg-[#0A0A0A] border border-[#262626] flex items-center justify-center
-          cursor-pointer hover:border-[#525252] transition-colors mb-4 overflow-hidden relative"
+        className="w-full aspect-[4/3] bg-white rounded-xl border border-[#2D6CDF] flex items-center justify-center
+          cursor-pointer hover:border-[#2D6CDF] transition-colors mb-4 overflow-hidden relative"
       >
         {preview ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -131,8 +131,8 @@ export function PostagemRapida({ lojaId, onPublicado }: Props) {
             value={nome}
             onChange={e => setNome(e.target.value)}
             placeholder="Ex: Perfume Viktor&Rolf 90ml"
-            className="w-full border border-[#262626] bg-transparent px-3 py-2.5 text-sm font-archivo text-[#FAFAFA]
-              focus:outline-none focus:border-[#525252] transition-colors placeholder:text-[#262626]"
+            className="w-full rounded-xl border border-[#2D6CDF] bg-transparent px-3 py-2.5 text-sm font-archivo text-[#0A0A0A]
+              focus:outline-none focus:border-[#0A0A0A] transition-colors placeholder:text-[#A3A3A3]"
           />
         </div>
 
@@ -140,12 +140,12 @@ export function PostagemRapida({ lojaId, onPublicado }: Props) {
         <button
           type="button"
           onClick={() => setTemDesconto(!temDesconto)}
-          className="flex items-center justify-between w-full border border-[#262626] px-3 py-2.5 transition-colors hover:border-[#525252]"
+          className="flex items-center justify-between w-full rounded-xl border border-[#2D6CDF] px-3 py-2.5 transition-colors hover:border-[#2D6CDF]"
         >
           <span className="text-[10px] font-archivo font-medium tracking-widest uppercase text-[#525252]">
             Está com desconto?
           </span>
-          <span className={`relative w-9 h-5 rounded-full transition-colors ${temDesconto ? 'bg-[#E63946]' : 'bg-[#262626]'}`}>
+          <span className={`relative w-9 h-5 rounded-full transition-colors ${temDesconto ? 'bg-[#E63946]' : 'bg-[#A3A3A3]'}`}>
             <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-[#FAFAFA] transition-transform ${temDesconto ? 'translate-x-4' : ''}`} />
           </span>
         </button>
@@ -161,8 +161,8 @@ export function PostagemRapida({ lojaId, onPublicado }: Props) {
                 value={precoUSD}
                 onChange={e => setPrecoUSD(e.target.value)}
                 placeholder="0"
-                className="w-full border border-[#262626] bg-transparent px-3 py-2.5 text-sm font-archivo text-[#FAFAFA]
-                  focus:outline-none focus:border-[#525252] transition-colors placeholder:text-[#262626]"
+                className="w-full rounded-xl border border-[#2D6CDF] bg-transparent px-3 py-2.5 text-sm font-archivo text-[#0A0A0A]
+                  focus:outline-none focus:border-[#0A0A0A] transition-colors placeholder:text-[#A3A3A3]"
               />
             </div>
           )}
@@ -175,8 +175,8 @@ export function PostagemRapida({ lojaId, onPublicado }: Props) {
               value={precoBRL}
               onChange={e => setPrecoBRL(e.target.value)}
               placeholder="0"
-              className="w-full border border-[#262626] bg-transparent px-3 py-2.5 text-sm font-archivo text-[#FAFAFA]
-                focus:outline-none focus:border-[#525252] transition-colors placeholder:text-[#262626]"
+              className="w-full rounded-xl border border-[#2D6CDF] bg-transparent px-3 py-2.5 text-sm font-archivo text-[#0A0A0A]
+                focus:outline-none focus:border-[#0A0A0A] transition-colors placeholder:text-[#A3A3A3]"
             />
           </div>
         </div>
@@ -189,18 +189,18 @@ export function PostagemRapida({ lojaId, onPublicado }: Props) {
           <div className="flex items-center gap-4">
             <button
               onClick={() => setQtd(Math.max(1, qtd - 1))}
-              className="w-10 h-10 border border-[#262626] flex items-center justify-center text-[#FAFAFA]
-                hover:border-[#525252] transition-colors"
+              className="w-10 h-10 rounded-xl border border-[#2D6CDF] flex items-center justify-center text-[#0A0A0A]
+                hover:border-[#2D6CDF] transition-colors"
             >
               <Minus size={14} />
             </button>
-            <span className="font-display text-2xl font-medium text-[#FAFAFA] w-8 text-center tabular-nums">
+            <span className="font-display text-2xl font-medium text-[#0A0A0A] w-8 text-center tabular-nums">
               {qtd}
             </span>
             <button
               onClick={() => setQtd(qtd + 1)}
-              className="w-10 h-10 border border-[#262626] flex items-center justify-center text-[#FAFAFA]
-                hover:border-[#525252] transition-colors"
+              className="w-10 h-10 rounded-xl border border-[#2D6CDF] flex items-center justify-center text-[#0A0A0A]
+                hover:border-[#2D6CDF] transition-colors"
             >
               <Plus size={14} />
             </button>
@@ -210,8 +210,8 @@ export function PostagemRapida({ lojaId, onPublicado }: Props) {
         <button
           onClick={handlePublicar}
           disabled={loading || !nome || !precoBRL || !foto}
-          className="w-full bg-[#FAFAFA] text-[#0A0A0A] font-archivo text-xs font-medium tracking-widest uppercase py-3.5
-            transition-all hover:bg-[#E5E5E5] disabled:opacity-30 mt-2"
+          className="w-full bg-[#0A0A0A] text-[#FAFAFA] font-archivo text-xs font-medium tracking-widest uppercase py-3.5
+            transition-all hover:bg-[#262626] disabled:opacity-30 mt-2"
         >
           {publicado ? '✓ Publicado!' : loading ? 'Publicando...' : 'Publicar no Feed'}
         </button>

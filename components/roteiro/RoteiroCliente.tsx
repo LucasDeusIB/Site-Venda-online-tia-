@@ -4,6 +4,7 @@ import { useState } from 'react'
 import useSWR from 'swr'
 import { ExternalLink, ChevronDown, ChevronRight } from 'lucide-react'
 import type { Loja, LojaStatus } from '@/lib/data/types'
+import { corBorda } from '@/lib/theme/acento'
 import { PedidoLojaForm } from './PedidoLojaForm'
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
@@ -32,7 +33,7 @@ export function RoteiroCliente() {
     return (
       <div className="space-y-4">
         {[1, 2, 3, 4, 5].map(i => (
-          <div key={i} className="h-20 bg-[#F5F5F5] animate-pulse" />
+          <div key={i} className="h-20 bg-[#F5F5F5] rounded-xl animate-pulse" />
         ))}
       </div>
     )
@@ -52,7 +53,7 @@ function LojaItem({ loja, index }: { loja: Loja; index: number }) {
   const isLive = loja.statusAtual === 'ao_vivo'
 
   return (
-    <div className={`animate-fade-in-up stagger-${Math.min(index + 1, 6)} border border-[#E5E5E5]`}>
+    <div className={`animate-fade-in-up stagger-${Math.min(index + 1, 6)} rounded-xl overflow-hidden border ${corBorda(index)}`}>
       {/* HEADER — toca para abrir o link + pedido da loja */}
       <button
         onClick={() => setAberta(!aberta)}
@@ -73,12 +74,12 @@ function LojaItem({ loja, index }: { loja: Loja; index: number }) {
 
       {/* SETA ABERTA — link oficial + enviar pedido desta loja */}
       {aberta && (
-        <div className="px-4 pb-5 pt-1 border-t border-[#E5E5E5] space-y-4">
+        <div className="px-4 pb-5 pt-1 border-t border-[#2D6CDF] space-y-4">
           <a
             href={loja.siteUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-between border border-[#E5E5E5] px-3 py-3 group hover:bg-[#F5F5F5] transition-colors"
+            className="flex items-center justify-between rounded-xl border border-[#2D6CDF] px-3 py-3 group hover:bg-[#F5F5F5] transition-colors"
           >
             <span className="text-xs font-archivo font-medium text-[#0A0A0A] group-hover:underline underline-offset-2">
               Abrir site da {loja.nome}

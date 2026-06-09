@@ -1,21 +1,16 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Paperclip, X, Check } from 'lucide-react'
-import type { Loja } from '@/lib/data/types'
-import {
-  getClienteIdentidade,
-  setClienteIdentidade,
-  gerarClienteId,
-  getClienteEmail,
-} from '@/lib/cliente'
+import type { Loja, ClienteIdentidade } from '@/lib/data/types'
+import { getClienteIdentidade } from '@/lib/cliente'
 
 // "Pedido da loja": tied to a store she is going to. Different from "Pedir"
 // (a general request). Both carry photo + message and show up in her list.
 export function PedidoLojaForm({ loja, onEnviado }: { loja: Loja; onEnviado?: () => void }) {
-  const identidade = getClienteIdentidade()
-  const [nome, setNome] = useState(identidade?.nome ?? '')
-  const [telefone, setTelefone] = useState(identidade?.telefone ?? '')
+  const [identidade, setIdentidade] = useState<ClienteIdentidade | null>(null)
+  const [nome, setNome] = useState('')
+  const [telefone, setTelefone] = useState('')
   const [descricao, setDescricao] = useState('')
   const [foto, setFoto] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
@@ -23,17 +18,27 @@ export function PedidoLojaForm({ loja, onEnviado }: { loja: Loja; onEnviado?: ()
   const [erro, setErro] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
 
+  // Hidrata a identidade só no cliente (ver PedirForm).
+  useEffect(() => {
+    const id = getClienteIdentidade()
+    if (id) {
+      setIdentidade(id)
+      setNome(id.nome ?? '')
+      setTelefone(id.telefone ?? '')
+    }
+  }, [])
+
   async function enviar() {
-    if (!nome.trim() || !telefone.trim() || !descricao.trim()) {
-      setErro('Preencha nome, WhatsApp e o que você quer.')
+    if (!identidade) {
+      setErro('Entre com seu nome, e-mail e telefone na tela inicial para fazer um pedido.')
+      return
+    }
+    if (!descricao.trim()) {
+      setErro('Descreva o que você quer.')
       return
     }
     setLoading(true)
     setErro('')
-
-    const clienteEmail = getClienteEmail()
-    const clienteId = gerarClienteId(clienteEmail, telefone)
-    setClienteIdentidade({ clienteId, nome: nome.trim(), telefone: telefone.trim(), email: clienteEmail || undefined })
 
     let printUrl: string | undefined
     if (foto) {
@@ -48,10 +53,10 @@ export function PedidoLojaForm({ loja, onEnviado }: { loja: Loja; onEnviado?: ()
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        clienteId,
-        clienteNome: nome.trim(),
-        clienteTelefone: telefone.trim(),
-        clienteEmail: clienteEmail || undefined,
+        clienteId: identidade.clienteId,
+        clienteNome: nome.trim() || identidade.nome,
+        clienteTelefone: telefone.trim() || identidade.telefone,
+        clienteEmail: identidade.email,
         lojaId: loja.id,
         descricao: descricao.trim(),
         printUrl,
@@ -79,7 +84,7 @@ export function PedidoLojaForm({ loja, onEnviado }: { loja: Loja; onEnviado?: ()
           value={nome}
           onChange={e => setNome(e.target.value)}
           placeholder="Seu nome"
-          className="border border-[#E5E5E5] bg-transparent px-3 py-2.5 text-sm font-archivo
+          className="rounded-xl border border-[#2D6CDF] bg-transparent px-3 py-2.5 text-sm font-archivo
             focus:outline-none focus:border-[#0A0A0A] transition-colors placeholder:text-[#A3A3A3]"
         />
         <input
@@ -87,7 +92,7 @@ export function PedidoLojaForm({ loja, onEnviado }: { loja: Loja; onEnviado?: ()
           value={telefone}
           onChange={e => setTelefone(e.target.value)}
           placeholder="WhatsApp"
-          className="border border-[#E5E5E5] bg-transparent px-3 py-2.5 text-sm font-archivo
+          className="rounded-xl border border-[#2D6CDF] bg-transparent px-3 py-2.5 text-sm font-archivo
             focus:outline-none focus:border-[#0A0A0A] transition-colors placeholder:text-[#A3A3A3]"
         />
       </div>
@@ -97,7 +102,7 @@ export function PedidoLojaForm({ loja, onEnviado }: { loja: Loja; onEnviado?: ()
         onChange={e => setDescricao(e.target.value)}
         placeholder={`O que procurar na ${loja.nome}? Descreva o produto.`}
         rows={3}
-        className="w-full border border-[#E5E5E5] bg-transparent px-3 py-2.5 text-sm font-archivo
+        className="w-full rounded-xl border border-[#2D6CDF] bg-transparent px-3 py-2.5 text-sm font-archivo
           focus:outline-none focus:border-[#0A0A0A] transition-colors placeholder:text-[#A3A3A3] resize-none"
       />
 
@@ -109,7 +114,7 @@ export function PedidoLojaForm({ loja, onEnviado }: { loja: Loja; onEnviado?: ()
         onChange={e => setFoto(e.target.files?.[0] ?? null)}
       />
       {foto ? (
-        <div className="flex items-center gap-3 p-2.5 border border-[#E5E5E5]">
+        <div className="flex items-center gap-3 p-2.5 rounded-xl border border-[#2D6CDF]">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={URL.createObjectURL(foto)} alt="Print" className="w-10 h-10 object-cover" />
           <span className="flex-1 text-xs font-archivo text-[#525252] truncate">{foto.name}</span>
@@ -121,7 +126,7 @@ export function PedidoLojaForm({ loja, onEnviado }: { loja: Loja; onEnviado?: ()
         <button
           onClick={() => fileRef.current?.click()}
           className="flex items-center gap-2 justify-center w-full text-xs font-archivo font-medium text-[#A3A3A3]
-            hover:text-[#0A0A0A] transition-colors border border-dashed border-[#E5E5E5] px-4 py-2.5"
+            hover:text-[#0A0A0A] transition-colors rounded-xl border border-dashed border-[#2D6CDF] px-4 py-2.5"
         >
           <Paperclip size={14} />
           Anexar print (opcional)

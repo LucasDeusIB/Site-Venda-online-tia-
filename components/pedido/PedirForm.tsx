@@ -1,17 +1,19 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import useSWR from 'swr'
 import { Paperclip, X, Check } from 'lucide-react'
-import type { Pedido } from '@/lib/data/types'
-import { getClienteIdentidade, setClienteIdentidade, gerarClienteId, getClienteEmail } from '@/lib/cliente'
+import type { Pedido, ClienteIdentidade } from '@/lib/data/types'
+import { getClienteIdentidade } from '@/lib/cliente'
+import { corBorda } from '@/lib/theme/acento'
 import { StatusPedidoBadge } from './StatusPedidoBadge'
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
 
 export function PedirForm() {
-  const [nome, setNome] = useState(() => getClienteIdentidade()?.nome ?? '')
-  const [telefone, setTelefone] = useState(() => getClienteIdentidade()?.telefone ?? '')
+  const [identidade, setIdentidade] = useState<ClienteIdentidade | null>(null)
+  const [nome, setNome] = useState('')
+  const [telefone, setTelefone] = useState('')
   const [site, setSite] = useState('')
   const [descricao, setDescricao] = useState('')
   const [print, setPrint] = useState<File | null>(null)
@@ -20,7 +22,19 @@ export function PedirForm() {
   const [erro, setErro] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
 
-  const clienteId = telefone ? gerarClienteId(getClienteEmail(), telefone) : null
+  // Hidrata a identidade (nome/e-mail/telefone definidos na porta de entrada) só
+  // no cliente — ler localStorage no inicializador de useState quebra na hidratação.
+  useEffect(() => {
+    const id = getClienteIdentidade()
+    if (id) {
+      setIdentidade(id)
+      setNome(id.nome ?? '')
+      setTelefone(id.telefone ?? '')
+    }
+  }, [])
+
+  // O clienteId é o da conta (e-mail+telefone) definido na entrada — fonte única.
+  const clienteId = identidade?.clienteId ?? null
   const { data: pedidosData, mutate: mutatePedidos } = useSWR<{ pedidos: Pedido[] }>(
     clienteId ? `/api/pedidos?clienteId=${clienteId}` : null,
     fetcher
@@ -28,16 +42,16 @@ export function PedirForm() {
   const meusPedidos = pedidosData?.pedidos ?? []
 
   async function handleEnviar() {
-    if (!nome.trim() || !telefone.trim() || !descricao.trim()) {
-      setErro('Preencha seu nome, WhatsApp e o que você quer.')
+    if (!identidade) {
+      setErro('Entre com seu nome, e-mail e telefone na tela inicial para fazer um pedido.')
+      return
+    }
+    if (!descricao.trim()) {
+      setErro('Descreva o que você quer.')
       return
     }
     setLoading(true)
     setErro('')
-
-    const clienteEmail = getClienteEmail()
-    const cId = gerarClienteId(clienteEmail, telefone)
-    setClienteIdentidade({ clienteId: cId, nome: nome.trim(), telefone: telefone.trim(), email: clienteEmail || undefined })
 
     let printUrl: string | undefined
     if (print) {
@@ -53,10 +67,10 @@ export function PedirForm() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        clienteId: cId,
-        clienteNome: nome.trim(),
-        clienteTelefone: telefone.trim(),
-        clienteEmail: clienteEmail || undefined,
+        clienteId: identidade.clienteId,
+        clienteNome: nome.trim() || identidade.nome,
+        clienteTelefone: telefone.trim() || identidade.telefone,
+        clienteEmail: identidade.email,
         siteUrl: site.trim() || undefined,
         descricao: descricao.trim(),
         printUrl,
@@ -91,7 +105,7 @@ export function PedirForm() {
               value={nome}
               onChange={e => setNome(e.target.value)}
               placeholder="Nome"
-              className="w-full border border-[#E5E5E5] bg-transparent px-3 py-2.5 text-sm font-archivo
+              className="w-full rounded-xl border border-[#E63946] bg-transparent px-3 py-2.5 text-sm font-archivo
                 focus:outline-none focus:border-[#0A0A0A] transition-colors placeholder:text-[#A3A3A3]"
             />
           </div>
@@ -104,7 +118,7 @@ export function PedirForm() {
               value={telefone}
               onChange={e => setTelefone(e.target.value)}
               placeholder="(00) 00000-0000"
-              className="w-full border border-[#E5E5E5] bg-transparent px-3 py-2.5 text-sm font-archivo
+              className="w-full rounded-xl border border-[#F5B700] bg-transparent px-3 py-2.5 text-sm font-archivo
                 focus:outline-none focus:border-[#0A0A0A] transition-colors placeholder:text-[#A3A3A3]"
             />
           </div>
@@ -119,7 +133,7 @@ export function PedirForm() {
             value={site}
             onChange={e => setSite(e.target.value)}
             placeholder="Cole o link do produto ou a marca (qualquer loja)"
-            className="w-full border border-[#E5E5E5] bg-transparent px-3 py-2.5 text-sm font-archivo
+            className="w-full rounded-xl border border-[#2D6CDF] bg-transparent px-3 py-2.5 text-sm font-archivo
               focus:outline-none focus:border-[#0A0A0A] transition-colors placeholder:text-[#A3A3A3]"
           />
         </div>
@@ -133,7 +147,7 @@ export function PedirForm() {
             onChange={e => setDescricao(e.target.value)}
             placeholder="Descreva o produto ou cole o link. Quanto mais detalhe, melhor."
             rows={4}
-            className="w-full border border-[#E5E5E5] bg-transparent px-3 py-2.5 text-sm font-archivo
+            className="w-full rounded-xl border border-[#E63946] bg-transparent px-3 py-2.5 text-sm font-archivo
               focus:outline-none focus:border-[#0A0A0A] transition-colors placeholder:text-[#A3A3A3] resize-none"
           />
         </div>
@@ -148,7 +162,7 @@ export function PedirForm() {
             onChange={e => setPrint(e.target.files?.[0] ?? null)}
           />
           {print ? (
-            <div className="flex items-center gap-3 p-3 border border-[#E5E5E5]">
+            <div className="flex items-center gap-3 p-3 rounded-xl border border-[#2D6CDF]">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={URL.createObjectURL(print)}
@@ -164,7 +178,7 @@ export function PedirForm() {
             <button
               onClick={() => fileRef.current?.click()}
               className="flex items-center gap-2 text-xs font-archivo font-medium text-[#A3A3A3] hover:text-[#0A0A0A]
-                transition-colors border border-dashed border-[#E5E5E5] w-full px-4 py-3 justify-center"
+                transition-colors rounded-xl border border-dashed border-[#F5B700] w-full px-4 py-3 justify-center"
             >
               <Paperclip size={14} />
               Anexar print do produto (opcional)
@@ -199,7 +213,7 @@ export function PedirForm() {
           <div className="space-y-4">
             {meusPedidos.map((pedido, i) => (
               <div key={pedido.id} className={`animate-fade-in-up stagger-${Math.min(i + 1, 6)}`}>
-                <PedidoItem pedido={pedido} />
+                <PedidoItem pedido={pedido} index={i} />
               </div>
             ))}
           </div>
@@ -209,11 +223,11 @@ export function PedirForm() {
   )
 }
 
-function PedidoItem({ pedido }: { pedido: Pedido }) {
+function PedidoItem({ pedido, index }: { pedido: Pedido; index: number }) {
   const ehLink = !!pedido.siteUrl && /^https?:\/\//i.test(pedido.siteUrl)
 
   return (
-    <div className="border border-[#E5E5E5] p-4">
+    <div className={`rounded-xl border ${corBorda(index)} p-4`}>
       <div className="flex items-start justify-between gap-3 mb-2">
         <div className="flex-1 min-w-0">
           {pedido.siteUrl ? (
@@ -243,7 +257,7 @@ function PedidoItem({ pedido }: { pedido: Pedido }) {
         </div>
       )}
       {pedido.respostaImportadora && (
-        <div className="mt-2 bg-[#F5F5F5] px-3 py-2">
+        <div className="mt-2 bg-[#F5F5F5] rounded-lg px-3 py-2">
           <p className="text-xs font-archivo text-[#525252] leading-relaxed">
             <span className="font-medium text-[#0A0A0A]">Resposta: </span>
             {pedido.respostaImportadora}

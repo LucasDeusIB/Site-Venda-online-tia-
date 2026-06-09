@@ -47,7 +47,7 @@ export function EntregaManager({ leva, onUpdate }: Props) {
   }
 
   return (
-    <div className="border border-[#262626] p-4 space-y-4">
+    <div className="rounded-xl border border-[#2D6CDF] p-4 space-y-4">
       <div className="flex items-center gap-2">
         <Plane size={13} className="text-[#525252]" />
         <p className="text-[10px] font-archivo font-medium tracking-widest uppercase text-[#525252]">
@@ -63,8 +63,8 @@ export function EntregaManager({ leva, onUpdate }: Props) {
           type="date"
           value={dataPrevista}
           onChange={e => setDataPrevista(e.target.value)}
-          className="w-full bg-transparent border border-[#262626] text-[#FAFAFA] px-3 py-2.5 text-sm font-archivo
-            focus:outline-none focus:border-[#525252] transition-colors"
+          className="w-full bg-transparent rounded-xl border border-[#2D6CDF] text-[#0A0A0A] px-3 py-2.5 text-sm font-archivo
+            focus:outline-none focus:border-[#0A0A0A] transition-colors"
         />
       </div>
 
@@ -75,11 +75,11 @@ export function EntregaManager({ leva, onUpdate }: Props) {
         <select
           value={status}
           onChange={e => setStatus(e.target.value as LevaStatus)}
-          className="w-full bg-transparent border border-[#262626] text-[#FAFAFA] px-3 py-2.5 text-sm font-archivo
-            focus:outline-none focus:border-[#525252] transition-colors appearance-none cursor-pointer"
+          className="w-full bg-transparent rounded-xl border border-[#2D6CDF] text-[#0A0A0A] px-3 py-2.5 text-sm font-archivo
+            focus:outline-none focus:border-[#0A0A0A] transition-colors appearance-none cursor-pointer"
         >
           {STATUS_OPCOES.map(o => (
-            <option key={o.value} value={o.value} className="bg-[#0A0A0A]">
+            <option key={o.value} value={o.value} className="bg-white">
               {o.label}
             </option>
           ))}
@@ -89,8 +89,8 @@ export function EntregaManager({ leva, onUpdate }: Props) {
       <button
         onClick={salvar}
         disabled={loading}
-        className="w-full flex items-center justify-center gap-2 bg-[#FAFAFA] text-[#0A0A0A] text-[10px] font-archivo
-          font-medium tracking-widest uppercase py-3 transition-all hover:bg-[#E5E5E5] disabled:opacity-30"
+        className="w-full flex items-center justify-center gap-2 bg-[#0A0A0A] text-[#FAFAFA] text-[10px] font-archivo
+          font-medium tracking-widest uppercase py-3 transition-all hover:bg-[#262626] disabled:opacity-30"
       >
         {salvo ? <><Check size={12} /> Salvo!</> : loading ? 'Salvando...' : 'Salvar'}
       </button>

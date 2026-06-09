@@ -61,7 +61,7 @@ export function FeedAoVivo() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="space-y-3 text-center">
-          <div className="w-8 h-8 border border-[#0A0A0A] border-t-transparent rounded-full animate-spin mx-auto" />
+          <div className="w-8 h-8 rounded-xl border border-[#0A0A0A] border-t-transparent rounded-full animate-spin mx-auto" />
         </div>
       </div>
     )

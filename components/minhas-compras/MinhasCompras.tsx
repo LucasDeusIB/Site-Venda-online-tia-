@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import useSWR from 'swr'
 import type { ReservaCliente, Pedido, Produto, Loja } from '@/lib/data/types'
 import { getClienteIdentidade } from '@/lib/cliente'
+import { corBorda } from '@/lib/theme/acento'
 import { StatusPedidoBadge } from '@/components/pedido/StatusPedidoBadge'
 import { ProximaLevaBloco } from './ProximaLevaBloco'
 
@@ -57,7 +58,7 @@ export function MinhasCompras() {
       <ProximaLevaBloco />
 
       {/* ABA SWITCHER */}
-      <div className="flex mb-8 border-b border-[#E5E5E5]">
+      <div className="flex mb-8 border-b border-[#E63946]">
         {[
           { key: 'reservas', label: 'Compras', count: reservasPendentes.length },
           { key: 'pedidos', label: 'Pedidos', count: 0 },
@@ -117,9 +118,9 @@ function ReservaItem({ reserva, produto, index }: { reserva: ReservaCliente; pro
   const isConfirmado = reserva.status === 'pix_confirmado'
 
   return (
-    <div className={`animate-fade-in-up stagger-${Math.min(index + 1, 6)} border border-[#E5E5E5] p-4`}>
+    <div className={`animate-fade-in-up stagger-${Math.min(index + 1, 6)} rounded-xl border ${corBorda(index)} p-4`}>
       <div className="flex gap-4">
-        <div className="w-16 h-20 bg-[#F5F5F5] shrink-0 overflow-hidden">
+        <div className="w-16 h-20 bg-[#F5F5F5] shrink-0 overflow-hidden rounded-xl">
           {produto?.fotoUrl && (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={produto.fotoUrl} alt={produto.nome} className="w-full h-full object-cover" />
@@ -133,7 +134,7 @@ function ReservaItem({ reserva, produto, index }: { reserva: ReservaCliente; pro
             R$ {reserva.valorBRL.toLocaleString('pt-BR')}
           </p>
 
-          <span className={`inline-block text-[9px] font-archivo font-medium tracking-widest uppercase px-2 py-1
+          <span className={`inline-block rounded-md text-[9px] font-archivo font-medium tracking-widest uppercase px-2 py-1
             ${isConfirmado ? 'bg-[#0A0A0A] text-[#FAFAFA]' : 'bg-[#E5E5E5] text-[#525252]'}`}>
             {STATUS_LABEL[reserva.status]}
           </span>
@@ -159,7 +160,7 @@ function PedidosLista({ pedidos, lojas }: { pedidos: Pedido[]; lojas: Loja[] }) 
       {pedidos.map((pedido, i) => {
         const loja = lojas.find(l => l.id === pedido.lojaId)
         return (
-          <div key={pedido.id} className={`animate-fade-in-up stagger-${Math.min(i + 1, 6)} border border-[#E5E5E5] p-4`}>
+          <div key={pedido.id} className={`animate-fade-in-up stagger-${Math.min(i + 1, 6)} rounded-xl border ${corBorda(i)} p-4`}>
             <div className="flex items-start justify-between gap-3 mb-1">
               <div>
                 <p className="text-[10px] font-archivo font-medium tracking-widest uppercase text-[#A3A3A3] break-all">
@@ -172,7 +173,7 @@ function PedidosLista({ pedidos, lojas }: { pedidos: Pedido[]; lojas: Loja[] }) 
               <StatusPedidoBadge status={pedido.status} />
             </div>
             {pedido.respostaImportadora && (
-              <div className="mt-2 bg-[#F5F5F5] px-3 py-2">
+              <div className="mt-2 bg-[#F5F5F5] rounded-lg px-3 py-2">
                 <p className="text-xs font-archivo text-[#525252]">
                   <span className="font-medium text-[#0A0A0A]">Resposta: </span>
                   {pedido.respostaImportadora}

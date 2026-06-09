@@ -30,7 +30,7 @@ export function ProdutoCard({ produto, index, isNew }: Props) {
         )}
 
         {/* IMAGE — the product is the hero */}
-        <div className="relative w-full aspect-[4/5] bg-[#F5F5F5] overflow-hidden group cursor-pointer photo-shadow"
+        <div className="relative w-full aspect-[4/5] bg-[#F5F5F5] overflow-hidden rounded-2xl group cursor-pointer photo-shadow"
           onClick={() => !esgotado && setShowModal(true)}>
 
           {/* VIDEO SLOT: substitua esta div por <video autoPlay muted loop playsInline> para adicionar vídeo decorativo */}

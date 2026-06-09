@@ -67,7 +67,7 @@ export function ReservaModal({ produto, onClose }: { produto: Produto; onClose: 
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
       <div className="relative w-full sm:max-w-md bg-[#FAFAFA] animate-fade-in-up">
-        <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-[#E5E5E5]">
+        <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-[#E63946]">
           <h2 className="font-display text-lg font-medium">
             {etapa === 'pix' ? 'Pagamento PIX' : 'Comprar'}
           </h2>
@@ -81,8 +81,8 @@ export function ReservaModal({ produto, onClose }: { produto: Produto; onClose: 
             <PixEtapa pix={pix} produto={produto} onClose={onClose} />
           ) : (
             <>
-              <div className="flex gap-4 mb-5 pb-5 border-b border-[#E5E5E5]">
-                <div className="w-16 h-20 bg-[#F5F5F5] shrink-0 overflow-hidden">
+              <div className="flex gap-4 mb-5 pb-5 border-b border-[#E63946]">
+                <div className="w-16 h-20 bg-[#F5F5F5] shrink-0 overflow-hidden rounded-xl">
                   {produto.fotoUrl && (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={produto.fotoUrl} alt={produto.nome} className="w-full h-full object-cover" />
@@ -110,7 +110,7 @@ export function ReservaModal({ produto, onClose }: { produto: Produto; onClose: 
                     value={nome}
                     onChange={e => setNome(e.target.value)}
                     placeholder="Como você se chama"
-                    className="w-full border border-[#E5E5E5] bg-transparent px-3 py-2.5 text-sm font-archivo
+                    className="w-full rounded-xl border border-[#E63946] bg-transparent px-3 py-2.5 text-sm font-archivo
                       focus:outline-none focus:border-[#0A0A0A] transition-colors placeholder:text-[#A3A3A3]"
                   />
                 </div>
@@ -123,7 +123,7 @@ export function ReservaModal({ produto, onClose }: { produto: Produto; onClose: 
                     value={telefone}
                     onChange={e => setTelefone(e.target.value)}
                     placeholder="(00) 00000-0000"
-                    className="w-full border border-[#E5E5E5] bg-transparent px-3 py-2.5 text-sm font-archivo
+                    className="w-full rounded-xl border border-[#E63946] bg-transparent px-3 py-2.5 text-sm font-archivo
                       focus:outline-none focus:border-[#0A0A0A] transition-colors placeholder:text-[#A3A3A3]"
                   />
                 </div>
@@ -160,7 +160,7 @@ function PixEtapa({ pix, produto, onClose }: { pix: PixPayload; produto: Produto
 
   return (
     <div className="space-y-5">
-      <div className="bg-[#F5F5F5] p-4 text-center">
+      <div className="bg-[#F5F5F5] rounded-lg p-4 text-center">
         <p className="text-[10px] font-archivo font-medium tracking-widest uppercase text-[#A3A3A3] mb-2">
           Valor a pagar
         </p>
@@ -174,7 +174,7 @@ function PixEtapa({ pix, produto, onClose }: { pix: PixPayload; produto: Produto
           Chave PIX
         </p>
         <div className="flex items-center gap-2">
-          <p className="flex-1 text-sm font-archivo bg-[#F5F5F5] px-3 py-2.5 break-all">
+          <p className="flex-1 text-sm font-archivo bg-[#F5F5F5] rounded-lg px-3 py-2.5 break-all">
             {pix.chavePix}
           </p>
           <button
@@ -188,14 +188,14 @@ function PixEtapa({ pix, produto, onClose }: { pix: PixPayload; produto: Produto
         <p className="text-xs text-[#A3A3A3] font-archivo mt-2">Destinatário: {pix.nomePix}</p>
       </div>
 
-      <div className="text-xs font-archivo text-[#525252] leading-relaxed bg-[#F5F5F5] p-4">
+      <div className="text-xs font-archivo text-[#525252] leading-relaxed bg-[#F5F5F5] rounded-lg p-4">
         <p className="font-medium text-[#0A0A0A] mb-1">Próximo passo</p>
         <p>Faça o PIX para garantir o seu. Após o pagamento, a importadora confirma e você acompanha o status em <em>Minhas Compras</em>.</p>
       </div>
 
       <button
         onClick={onClose}
-        className="w-full border border-[#E5E5E5] text-[#0A0A0A] font-archivo text-xs font-medium tracking-widest uppercase py-3
+        className="w-full rounded-xl border border-[#E63946] text-[#0A0A0A] font-archivo text-xs font-medium tracking-widest uppercase py-3
           transition-all hover:bg-[#F5F5F5]"
       >
         Fechar e acompanhar

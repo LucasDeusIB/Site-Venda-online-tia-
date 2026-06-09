@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Plus, Trash2, ExternalLink } from 'lucide-react'
 import type { Loja, LojaStatus } from '@/lib/data/types'
+import { corBorda } from '@/lib/theme/acento'
 
 const STATUS_OPTIONS: { value: LojaStatus; label: string }[] = [
   { value: 'ao_vivo', label: 'Ao vivo agora' },
@@ -23,8 +24,8 @@ export function LojasManager({ lojas, onUpdate }: Props) {
           Minhas lojas ({lojas.length})
         </p>
         <div className="space-y-2">
-          {lojas.map(loja => (
-            <LojaRow key={loja.id} loja={loja} onUpdate={onUpdate} />
+          {lojas.map((loja, i) => (
+            <LojaRow key={loja.id} loja={loja} index={i} onUpdate={onUpdate} />
           ))}
         </div>
       </div>
@@ -61,27 +62,27 @@ function NovaLoja({ onUpdate }: { onUpdate: () => void }) {
   }
 
   return (
-    <div className="border border-[#262626] p-4 space-y-3">
+    <div className="rounded-xl border border-[#2D6CDF] p-4 space-y-3">
       <p className="text-[10px] font-archivo font-medium tracking-widest uppercase text-[#525252]">Adicionar loja</p>
       <input
         value={nome}
         onChange={e => setNome(e.target.value)}
         placeholder="Nome (ex: Victoria's Secret)"
-        className="w-full border border-[#262626] bg-transparent px-3 py-2.5 text-sm font-archivo text-[#FAFAFA]
-          focus:outline-none focus:border-[#525252] placeholder:text-[#262626]"
+        className="w-full rounded-xl border border-[#2D6CDF] bg-transparent px-3 py-2.5 text-sm font-archivo text-[#0A0A0A]
+          focus:outline-none focus:border-[#0A0A0A] placeholder:text-[#A3A3A3]"
       />
       <input
         value={siteUrl}
         onChange={e => setSiteUrl(e.target.value)}
         placeholder="Link do site (https://...)"
-        className="w-full border border-[#262626] bg-transparent px-3 py-2.5 text-sm font-archivo text-[#FAFAFA]
-          focus:outline-none focus:border-[#525252] placeholder:text-[#262626]"
+        className="w-full rounded-xl border border-[#2D6CDF] bg-transparent px-3 py-2.5 text-sm font-archivo text-[#0A0A0A]
+          focus:outline-none focus:border-[#0A0A0A] placeholder:text-[#A3A3A3]"
       />
       <select
         value={statusAtual}
         onChange={e => setStatusAtual(e.target.value as LojaStatus)}
-        className="w-full border border-[#262626] bg-[#0A0A0A] text-[#FAFAFA] px-3 py-2.5 text-sm font-archivo
-          focus:outline-none focus:border-[#525252] appearance-none cursor-pointer"
+        className="w-full rounded-xl border border-[#2D6CDF] bg-white text-[#0A0A0A] px-3 py-2.5 text-sm font-archivo
+          focus:outline-none focus:border-[#0A0A0A] appearance-none cursor-pointer"
       >
         {STATUS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
       </select>
@@ -89,8 +90,8 @@ function NovaLoja({ onUpdate }: { onUpdate: () => void }) {
       <button
         onClick={criar}
         disabled={loading}
-        className="w-full flex items-center justify-center gap-2 bg-[#FAFAFA] text-[#0A0A0A] font-archivo text-xs
-          font-medium tracking-widest uppercase py-3 transition-all hover:bg-[#E5E5E5] disabled:opacity-50"
+        className="w-full flex items-center justify-center gap-2 bg-[#0A0A0A] text-[#FAFAFA] font-archivo text-xs
+          font-medium tracking-widest uppercase py-3 transition-all hover:bg-[#262626] disabled:opacity-50"
       >
         <Plus size={14} /> {loading ? 'Criando...' : 'Criar loja'}
       </button>
@@ -98,7 +99,7 @@ function NovaLoja({ onUpdate }: { onUpdate: () => void }) {
   )
 }
 
-function LojaRow({ loja, onUpdate }: { loja: Loja; onUpdate: () => void }) {
+function LojaRow({ loja, index, onUpdate }: { loja: Loja; index: number; onUpdate: () => void }) {
   const [horario, setHorario] = useState(loja.horarioEstimado ?? '')
 
   async function patch(data: Record<string, unknown>) {
@@ -122,11 +123,11 @@ function LojaRow({ loja, onUpdate }: { loja: Loja; onUpdate: () => void }) {
   }
 
   return (
-    <div className="border border-[#262626] p-3 space-y-2">
+    <div className={`rounded-xl border ${corBorda(index)} p-3 space-y-2`}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 min-w-0">
-          <span className="font-archivo text-sm font-medium text-[#FAFAFA] truncate">{loja.nome}</span>
-          <a href={loja.siteUrl} target="_blank" rel="noopener noreferrer" className="text-[#525252] hover:text-[#FAFAFA] shrink-0">
+          <span className="font-archivo text-sm font-medium text-[#0A0A0A] truncate">{loja.nome}</span>
+          <a href={loja.siteUrl} target="_blank" rel="noopener noreferrer" className="text-[#525252] hover:text-[#0A0A0A] shrink-0">
             <ExternalLink size={12} />
           </a>
         </div>
@@ -138,8 +139,8 @@ function LojaRow({ loja, onUpdate }: { loja: Loja; onUpdate: () => void }) {
         <select
           value={loja.statusAtual}
           onChange={e => patch({ statusAtual: e.target.value, horarioEstimado: horario || undefined })}
-          className="flex-1 border border-[#262626] bg-[#0A0A0A] text-[#FAFAFA] px-2 py-2 text-xs font-archivo
-            focus:outline-none focus:border-[#525252] appearance-none cursor-pointer"
+          className="flex-1 rounded-xl border border-[#2D6CDF] bg-white text-[#0A0A0A] px-2 py-2 text-xs font-archivo
+            focus:outline-none focus:border-[#0A0A0A] appearance-none cursor-pointer"
         >
           {STATUS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
@@ -149,8 +150,8 @@ function LojaRow({ loja, onUpdate }: { loja: Loja; onUpdate: () => void }) {
             onChange={e => setHorario(e.target.value)}
             onBlur={() => patch({ statusAtual: loja.statusAtual, horarioEstimado: horario || undefined })}
             placeholder="14h"
-            className="w-16 border border-[#262626] bg-transparent text-[#FAFAFA] px-2 py-2 text-xs font-archivo
-              focus:outline-none focus:border-[#525252] placeholder:text-[#262626]"
+            className="w-16 rounded-xl border border-[#2D6CDF] bg-transparent text-[#0A0A0A] px-2 py-2 text-xs font-archivo
+              focus:outline-none focus:border-[#0A0A0A] placeholder:text-[#A3A3A3]"
           />
         )}
       </div>

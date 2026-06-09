@@ -93,7 +93,7 @@ export function PortaEntrada() {
               onKeyDown={e => e.key === 'Enter' && entrar()}
               placeholder="seu nome"
               autoComplete="name"
-              className="w-full border border-[#262626] bg-transparent px-4 py-3.5 text-sm font-archivo text-[#FAFAFA]
+              className="w-full rounded-xl border border-[#262626] bg-transparent px-4 py-3.5 text-sm font-archivo text-[#FAFAFA]
                 focus:outline-none focus:border-[#525252] transition-colors placeholder:text-[#525252]"
             />
             <input
@@ -103,7 +103,7 @@ export function PortaEntrada() {
               onKeyDown={e => e.key === 'Enter' && entrar()}
               placeholder="seu e-mail"
               autoComplete="email"
-              className="w-full border border-[#262626] bg-transparent px-4 py-3.5 text-sm font-archivo text-[#FAFAFA]
+              className="w-full rounded-xl border border-[#262626] bg-transparent px-4 py-3.5 text-sm font-archivo text-[#FAFAFA]
                 focus:outline-none focus:border-[#525252] transition-colors placeholder:text-[#525252]"
             />
             <input
@@ -113,7 +113,7 @@ export function PortaEntrada() {
               onKeyDown={e => e.key === 'Enter' && entrar()}
               placeholder="seu telefone com DDD"
               autoComplete="tel"
-              className="w-full border border-[#262626] bg-transparent px-4 py-3.5 text-sm font-archivo text-[#FAFAFA]
+              className="w-full rounded-xl border border-[#262626] bg-transparent px-4 py-3.5 text-sm font-archivo text-[#FAFAFA]
                 focus:outline-none focus:border-[#525252] transition-colors placeholder:text-[#525252]"
             />
             <p className="text-[11px] font-archivo text-[#525252] leading-relaxed">
@@ -142,7 +142,7 @@ export function PortaEntrada() {
               onKeyDown={e => e.key === 'Enter' && acessarPainel()}
               placeholder="senha"
               autoFocus
-              className="w-full border border-[#262626] bg-transparent px-4 py-3.5 text-sm font-archivo text-[#FAFAFA]
+              className="w-full rounded-xl border border-[#262626] bg-transparent px-4 py-3.5 text-sm font-archivo text-[#FAFAFA]
                 focus:outline-none focus:border-[#525252] transition-colors placeholder:text-[#525252]"
             />
 
