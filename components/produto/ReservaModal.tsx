@@ -47,7 +47,7 @@ export function ReservaModal({ produto, onClose }: { produto: Produto; onClose: 
       const res = await fetch('/api/reservas', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ produtoId: produto.id, clienteId, clienteNome: nome.trim(), clienteTelefone: telefone.trim(), clienteEmail: clienteEmail || undefined }),
+        body: JSON.stringify({ produtoId: produto.id, clienteNome: nome.trim(), clienteTelefone: telefone.trim(), clienteEmail: clienteEmail || undefined }),
       })
       const data = await res.json()
       if (!res.ok) {

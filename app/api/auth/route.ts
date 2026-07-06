@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
+import { verificarLimite, ipDaRequisicao } from '@/lib/rate-limit'
 
 async function hashPassword(password: string): Promise<string> {
   const encoder = new TextEncoder()
@@ -11,6 +12,15 @@ async function hashPassword(password: string): Promise<string> {
 }
 
 export async function POST(req: NextRequest) {
+  // Throttle panel-login attempts per IP so the password can't be brute-forced.
+  const limite = verificarLimite(`auth:${ipDaRequisicao(req)}`, { max: 8, janelaMs: 15 * 60_000 })
+  if (!limite.ok) {
+    return NextResponse.json(
+      { erro: 'Muitas tentativas. Tente novamente em alguns minutos.' },
+      { status: 429 }
+    )
+  }
+
   const { password } = await req.json()
   const expected = process.env.PANEL_PASSWORD ?? 'coreiq2024'
 

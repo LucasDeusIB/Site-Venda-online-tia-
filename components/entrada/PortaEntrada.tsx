@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { BRAND } from '@/lib/theme/brand'
 import { PoweredBy } from '@/components/nav/PoweredBy'
-import { gerarClienteId, setClienteIdentidade } from '@/lib/cliente'
+import { gerarClienteId, setClienteIdentidade, garantirSessaoCliente } from '@/lib/cliente'
 
 // Not a secret — it only reveals the password field. The real gate is the password.
 const STAFF_KEYWORD = 'Acesso Vendas Staff'
@@ -50,6 +50,11 @@ export function PortaEntrada() {
       telefone: telefone.trim(),
       email: email.trim().toLowerCase(),
     })
+    // Establish the signed server session before entering, so her orders/purchases
+    // load. Non-blocking on failure — the app still works, reads just come back empty.
+    setLoading(true)
+    await garantirSessaoCliente()
+    setLoading(false)
     router.push('/ao-vivo')
   }
 

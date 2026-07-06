@@ -57,3 +57,24 @@ export function getClienteEmail(): string {
   if (typeof window === 'undefined') return ''
   return getClienteIdentidade()?.email ?? localStorage.getItem(EMAIL_KEY) ?? ''
 }
+
+// Ensures the server holds a signed session cookie for the stored identity. The
+// data endpoints now scope by that cookie (not by a clienteId in the URL), so
+// components call this on mount before reading. Idempotent and cheap; returns the
+// server-confirmed clienteId, or null when there is no stored identity yet.
+export async function garantirSessaoCliente(): Promise<string | null> {
+  const id = getClienteIdentidade()
+  if (!id?.telefone) return null
+  try {
+    const res = await fetch('/api/cliente/sessao', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nome: id.nome, email: id.email ?? '', telefone: id.telefone }),
+    })
+    if (!res.ok) return null
+    const data = await res.json()
+    return data.clienteId ?? id.clienteId ?? null
+  } catch {
+    return null
+  }
+}

@@ -48,7 +48,6 @@ export function PedidoLojaForm({ loja, onEnviado }: { loja: Loja; onEnviado?: ()
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        clienteId,
         clienteNome: nome.trim(),
         clienteTelefone: telefone.trim(),
         clienteEmail: clienteEmail || undefined,

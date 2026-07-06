@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import useSWR from 'swr'
 import type { AbaNotificacao, NotificacoesCliente } from '@/lib/data/types'
-import { getClienteIdentidade } from '@/lib/cliente'
+import { garantirSessaoCliente } from '@/lib/cliente'
 import { FloatingNav } from './FloatingNav'
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
@@ -26,12 +26,12 @@ export function FloatingNavCliente() {
   const [clienteId, setClienteId] = useState<string | null>(null)
 
   useEffect(() => {
-    const id = getClienteIdentidade()
-    if (id) setClienteId(id.clienteId)
+    garantirSessaoCliente().then(setClienteId)
   }, [])
 
+  // Notifications are scoped server-side by the signed session cookie.
   const { data, mutate } = useSWR<NotificacoesCliente>(
-    clienteId ? `/api/notificacoes?clienteId=${clienteId}` : null,
+    clienteId ? '/api/notificacoes' : null,
     fetcher,
     { refreshInterval: 10000 }
   )
@@ -45,7 +45,7 @@ export function FloatingNavCliente() {
     fetch('/api/notificacoes/visto', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ clienteId, aba }),
+      body: JSON.stringify({ aba }),
     })
       .then(() => mutate())
       .catch(() => {})

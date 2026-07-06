@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import useSWR from 'swr'
 import { Paperclip, X, Check } from 'lucide-react'
 import type { Pedido } from '@/lib/data/types'
-import { getClienteIdentidade, setClienteIdentidade, gerarClienteId, getClienteEmail } from '@/lib/cliente'
+import { getClienteIdentidade, setClienteIdentidade, gerarClienteId, getClienteEmail, garantirSessaoCliente } from '@/lib/cliente'
 import { StatusPedidoBadge } from './StatusPedidoBadge'
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
@@ -18,11 +18,16 @@ export function PedirForm() {
   const [enviado, setEnviado] = useState(false)
   const [loading, setLoading] = useState(false)
   const [erro, setErro] = useState('')
+  const [sessaoId, setSessaoId] = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
-  const clienteId = telefone ? gerarClienteId(getClienteEmail(), telefone) : null
+  // Orders are read from the signed session cookie, not a clienteId in the URL.
+  useEffect(() => {
+    garantirSessaoCliente().then(setSessaoId)
+  }, [])
+
   const { data: pedidosData, mutate: mutatePedidos } = useSWR<{ pedidos: Pedido[] }>(
-    clienteId ? `/api/pedidos?clienteId=${clienteId}` : null,
+    sessaoId ? '/api/pedidos' : null,
     fetcher
   )
   const meusPedidos = pedidosData?.pedidos ?? []
@@ -49,11 +54,11 @@ export function PedirForm() {
       printUrl = uploaded.url
     }
 
+    // The POST derives the clienteId server-side and (re)issues the session cookie.
     const res = await fetch('/api/pedidos', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        clienteId: cId,
         clienteNome: nome.trim(),
         clienteTelefone: telefone.trim(),
         clienteEmail: clienteEmail || undefined,
@@ -69,6 +74,7 @@ export function PedirForm() {
       setDescricao('')
       setSite('')
       setPrint(null)
+      setSessaoId(cId)
       mutatePedidos()
       setTimeout(() => setEnviado(false), 3000)
     } else {

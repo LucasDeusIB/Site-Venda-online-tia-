@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import useSWR from 'swr'
 import type { ReservaCliente, Pedido, Produto, Loja } from '@/lib/data/types'
-import { getClienteIdentidade } from '@/lib/cliente'
+import { garantirSessaoCliente } from '@/lib/cliente'
 import { StatusPedidoBadge } from '@/components/pedido/StatusPedidoBadge'
 import { ProximaLevaBloco } from './ProximaLevaBloco'
 
@@ -11,21 +11,25 @@ const fetcher = (url: string) => fetch(url).then(r => r.json())
 
 export function MinhasCompras() {
   const [clienteId, setClienteId] = useState<string | null>(null)
+  const [pronto, setPronto] = useState(false)
   const [aba, setAba] = useState<'reservas' | 'pedidos'>('reservas')
 
   useEffect(() => {
-    const id = getClienteIdentidade()
-    if (id) setClienteId(id.clienteId)
+    garantirSessaoCliente().then(id => {
+      setClienteId(id)
+      setPronto(true)
+    })
   }, [])
 
+  // Data is scoped server-side by the signed session cookie — no clienteId in the URL.
   const { data: reservasData } = useSWR<{ reservas: ReservaCliente[] }>(
-    clienteId ? `/api/reservas?clienteId=${clienteId}` : null,
+    clienteId ? '/api/reservas' : null,
     fetcher,
     { refreshInterval: 10000 }
   )
 
   const { data: pedidosData } = useSWR<{ pedidos: Pedido[] }>(
-    clienteId ? `/api/pedidos?clienteId=${clienteId}` : null,
+    clienteId ? '/api/pedidos' : null,
     fetcher,
     { refreshInterval: 10000 }
   )
@@ -38,7 +42,7 @@ export function MinhasCompras() {
   const produtos = produtosData?.produtos ?? []
   const lojas = lojasData?.lojas ?? []
 
-  if (!clienteId) {
+  if (pronto && !clienteId) {
     return (
       <div className="py-16 text-center">
         <p className="font-display text-xl font-medium text-[#0A0A0A] mb-2">Nenhuma compra ainda</p>
