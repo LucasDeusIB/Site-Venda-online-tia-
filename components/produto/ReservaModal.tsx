@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 import type { Produto } from '@/lib/data/types'
-import { getClienteIdentidade, setClienteIdentidade, gerarClienteId, getClienteEmail } from '@/lib/cliente'
+import { getClienteIdentidade, getClienteEmail } from '@/lib/cliente'
 
 type Etapa = 'identificar' | 'confirmar' | 'pix'
 
@@ -39,15 +39,15 @@ export function ReservaModal({ produto, onClose }: { produto: Produto; onClose: 
     setLoading(true)
     setErro('')
 
+    // A compra entra na conta logada: quem manda é o cookie assinado da sessão,
+    // não o que for digitado aqui.
     const clienteEmail = getClienteEmail()
-    const clienteId = gerarClienteId(clienteEmail, telefone)
-    setClienteIdentidade({ clienteId, nome: nome.trim(), telefone: telefone.trim(), email: clienteEmail || undefined })
 
     try {
       const res = await fetch('/api/reservas', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ produtoId: produto.id, clienteId, clienteNome: nome.trim(), clienteTelefone: telefone.trim(), clienteEmail: clienteEmail || undefined }),
+        body: JSON.stringify({ produtoId: produto.id, clienteNome: nome.trim(), clienteTelefone: telefone.trim(), clienteEmail: clienteEmail || undefined }),
       })
       const data = await res.json()
       if (!res.ok) {

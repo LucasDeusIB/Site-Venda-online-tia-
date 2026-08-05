@@ -7,6 +7,49 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Conta da cliente. Criada só pelo "Cadastrar-se": é a existência desta linha
+// que autoriza o login — antes disso qualquer par e-mail+telefone entrava.
+// O `id` é o MESMO hash determinístico do par (lib/sessao-cliente.gerarClienteId),
+// então os pedidos/compras já gravados continuam ligados à conta certa.
+model Cliente {
+  id              String   @id
+  nome            String
+  email           String   @unique
+  telefone        String // como a cliente digitou (exibição/WhatsApp)
+  telefoneDigitos String // só dígitos — é o que vale na conferência do login
+  criadoEm        DateTime @default(now())
+  ultimoAcessoEm  DateTime @default(now())
+
+  perguntas Pergunta[]
+}
+
+// Conversa privada de uma cliente com a staff. Some da aba depois de 48h sem
+// nenhuma mensagem nova (ver PERGUNTA_TTL_MS em lib/data/perguntas.ts).
+model Pergunta {
+  id                String   @id @default(cuid())
+  clienteId         String
+  criadoEm          DateTime @default(now())
+  ultimaAtividadeEm DateTime @default(now())
+
+  cliente   Cliente            @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  mensagens MensagemPergunta[]
+
+  @@index([clienteId])
+  @@index([ultimaAtividadeEm])
+}
+
+model MensagemPergunta {
+  id         String   @id @default(cuid())
+  perguntaId String
+  autor      String // 'cliente' | 'staff'
+  texto      String
+  criadoEm   DateTime @default(now())
+
+  pergunta Pergunta @relation(fields: [perguntaId], references: [id], onDelete: Cascade)
+
+  @@index([perguntaId])
+}
+
 model Loja {
   id              String   @id
   nome            String

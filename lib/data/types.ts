@@ -77,6 +77,41 @@ export type ClienteIdentidade = {
   email?: string
 }
 
+// Conta cadastrada (o par e-mail+telefone). Só quem tem conta entra.
+export type ContaCliente = {
+  clienteId: string
+  nome: string
+  email: string
+  telefone: string
+}
+
+export type AutorMensagem = 'cliente' | 'staff'
+
+// Teto de caracteres por mensagem (vale para a cliente e para a staff). Fica
+// aqui, e não em lib/data/perguntas, porque as telas precisam dele e aquele
+// arquivo puxa o Prisma junto.
+export const TEXTO_MAX = 1000
+
+export type MensagemPergunta = {
+  id: string
+  perguntaId: string
+  autor: AutorMensagem
+  texto: string
+  criadoEm: Date
+}
+
+// Conversa privada de uma cliente com a staff.
+export type Pergunta = {
+  id: string
+  clienteId: string
+  clienteNome: string
+  clienteEmail: string
+  clienteTelefone: string
+  criadoEm: Date
+  ultimaAtividadeEm: Date
+  mensagens: MensagemPergunta[]
+}
+
 export type LevaStatus = 'a_caminho' | 'no_brasil' | 'saiu_entrega' | 'entregue'
 
 export type LevaEntrega = {
@@ -87,11 +122,12 @@ export type LevaEntrega = {
 }
 
 // Abas do cliente que podem receber o pontinho de novidade.
-export type AbaNotificacao = 'ao_vivo' | 'pedir' | 'minhas_compras'
+export type AbaNotificacao = 'ao_vivo' | 'pedir' | 'minhas_compras' | 'perguntas'
 
 // Estado por cliente: quais abas têm novidade não vista (só o pontinho, sem número).
 export type NotificacoesCliente = {
   aoVivo: boolean
   pedir: boolean
   minhasCompras: boolean
+  perguntas: boolean
 }

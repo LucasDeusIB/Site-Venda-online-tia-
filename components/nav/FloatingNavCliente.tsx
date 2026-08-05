@@ -14,6 +14,7 @@ const HREF_PARA_ABA: Record<string, AbaNotificacao> = {
   '/ao-vivo': 'ao_vivo',
   '/pedir': 'pedir',
   '/minhas-compras': 'minhas_compras',
+  '/perguntas': 'perguntas',
 }
 
 /**
@@ -55,6 +56,7 @@ export function FloatingNavCliente() {
     '/ao-vivo': data?.aoVivo ?? false,
     '/pedir': data?.pedir ?? false,
     '/minhas-compras': data?.minhasCompras ?? false,
+    '/perguntas': data?.perguntas ?? false,
   }
 
   return <FloatingNav dots={dots} />

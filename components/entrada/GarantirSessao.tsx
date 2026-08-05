@@ -1,17 +1,27 @@
 'use client'
 
 import { useEffect } from 'react'
-import { estabelecerSessao, getClienteIdentidade } from '@/lib/cliente'
+import { useRouter } from 'next/navigation'
+import { carregarSessao, limparClienteIdentidade } from '@/lib/cliente'
 
-// Cliente que já entrou antes chega direto nas telas com a identidade no
-// localStorage, mas o cookie de sessão assinado pode ter expirado ou sumido.
-// Este componente (montado no layout do cliente) o revalida silenciosamente.
+// Guarda das telas do cliente. Pergunta ao servidor de quem é a sessão: se o
+// cookie sumiu, expirou ou aponta para uma conta que não existe mais, limpa a
+// cópia local e devolve a pessoa para a porta de entrada. Sem conta cadastrada,
+// não há acesso às telas privadas.
 export function GarantirSessao() {
+  const router = useRouter()
+
   useEffect(() => {
-    const id = getClienteIdentidade()
-    if (id?.email && id.telefone && id.nome) {
-      estabelecerSessao({ nome: id.nome, email: id.email, telefone: id.telefone })
+    let cancelado = false
+    carregarSessao().then(conta => {
+      if (cancelado || conta) return
+      limparClienteIdentidade()
+      router.replace('/')
+    })
+    return () => {
+      cancelado = true
     }
-  }, [])
+  }, [router])
+
   return null
 }

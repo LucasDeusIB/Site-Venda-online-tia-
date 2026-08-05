@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Zap, ShoppingBag, Map, Heart } from 'lucide-react'
+import { Zap, ShoppingBag, Map, Heart, MessageCircle } from 'lucide-react'
 
 type NavItem = {
   href: string
@@ -17,6 +17,7 @@ const navItems: NavItem[] = [
   { href: '/pedir', label: 'Pedir', icon: ShoppingBag, color: 'var(--c-yellow)', darkText: true },
   { href: '/roteiro', label: 'Roteiro', icon: Map, color: 'var(--c-blue)' },
   { href: '/minhas-compras', label: 'Minhas', icon: Heart, color: 'var(--c-red)' },
+  { href: '/perguntas', label: 'Perguntas', icon: MessageCircle, color: 'var(--c-yellow)', darkText: true },
 ]
 
 export function FloatingNav({
@@ -31,7 +32,8 @@ export function FloatingNav({
 
   return (
     <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
-      <div className="flex items-center gap-1 px-2 py-2 bg-[#0A0A0A] rounded-full menu-shadow">
+      {/* gap/padding menores no celular: com 5 abas, "Perguntas" ainda cabe em 375px */}
+      <div className="flex items-center gap-0.5 sm:gap-1 px-2 py-2 bg-[#0A0A0A] rounded-full menu-shadow">
         {navItems.map(({ href, label, icon: Icon, color, darkText }) => {
           const isActive = pathname === href || pathname.startsWith(href + '/')
           const badge = badges[href] ?? 0
@@ -42,7 +44,7 @@ export function FloatingNav({
               key={href}
               href={href}
               style={isActive ? { backgroundColor: color, color: darkText ? '#0A0A0A' : '#FAFAFA' } : undefined}
-              className={`relative flex flex-col items-center gap-0.5 px-4 py-2 rounded-full transition-all duration-200
+              className={`relative flex flex-col items-center gap-0.5 px-3 sm:px-4 py-2 rounded-full transition-all duration-200
                 ${isActive ? '' : 'text-[#A3A3A3] hover:text-[#FAFAFA]'}`}
             >
               {/* key alterna ao ativar → remonta o ícone → o "jump" toca de novo */}
@@ -51,7 +53,7 @@ export function FloatingNav({
                 size={18}
                 className={`shrink-0 ${isActive ? 'animate-tab-jump' : ''}`}
               />
-              <span className="text-[10px] font-archivo font-medium tracking-wider uppercase leading-none">
+              <span className="text-[9px] sm:text-[10px] font-archivo font-medium tracking-wide sm:tracking-wider uppercase leading-none whitespace-nowrap">
                 {label}
               </span>
               {badge > 0 && (

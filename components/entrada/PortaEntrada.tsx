@@ -1,30 +1,29 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { BRAND } from '@/lib/theme/brand'
 import { PoweredBy } from '@/components/nav/PoweredBy'
-import { estabelecerSessao, setClienteIdentidade } from '@/lib/cliente'
+import { entrar } from '@/lib/cliente'
 
-// Porta do staff: nome "painel staff" (ou só "staff") + o campo de telefone
-// usado como senha do painel. A senha continua verificada no servidor
+// Porta do staff: escrever "painel staff" (ou só "staff") no campo do e-mail e a
+// senha do painel no campo do telefone. A senha continua conferida no servidor
 // (/api/auth), então o painel segue protegido por cookie httpOnly e rate-limit.
 const STAFF_NOMES = ['painel staff', 'staff']
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export function PortaEntrada() {
   const router = useRouter()
-  const [nome, setNome] = useState('')
   const [email, setEmail] = useState('')
   const [telefone, setTelefone] = useState('')
   const [erro, setErro] = useState('')
   const [loading, setLoading] = useState(false)
 
-  async function entrar() {
+  async function fazerLogin() {
+    if (loading) return
     setErro('')
 
-    // Porta do staff: nome "painel staff"/"staff" + telefone = senha → /painel.
-    if (STAFF_NOMES.includes(nome.trim().toLowerCase())) {
+    if (STAFF_NOMES.includes(email.trim().toLowerCase())) {
       setLoading(true)
       const res = await fetch('/api/auth', {
         method: 'POST',
@@ -40,38 +39,19 @@ export function PortaEntrada() {
       return
     }
 
-    if (!nome.trim()) {
-      setErro('Digite seu nome para entrar.')
-      return
-    }
-    if (!EMAIL_RE.test(email.trim())) {
-      setErro('Digite um e-mail válido para entrar.')
-      return
-    }
-    if (telefone.replace(/\D/g, '').length < 10) {
-      setErro('Digite um telefone válido (com DDD).')
+    if (!email.trim() || !telefone.trim()) {
+      setErro('Preencha e-mail e telefone.')
       return
     }
 
-    // Identity = email+phone pair. O servidor calcula o id e assina o cookie de
-    // sessão; sem esse cookie, as rotas de cliente não liberam os dados.
+    // O servidor só devolve sessão se o par existir no cadastro.
     setLoading(true)
-    const sessao = await estabelecerSessao({
-      nome: nome.trim(),
-      email: email.trim(),
-      telefone: telefone.trim(),
-    })
+    const resultado = await entrar({ email: email.trim(), telefone: telefone.trim() })
     setLoading(false)
-    if (!sessao) {
-      setErro('Não deu pra entrar agora. Tente de novo.')
+    if (!resultado.ok) {
+      setErro(resultado.erro)
       return
     }
-    setClienteIdentidade({
-      clienteId: sessao.clienteId,
-      nome: sessao.nome,
-      telefone: sessao.telefone,
-      email: sessao.email,
-    })
     router.push('/ao-vivo')
   }
 
@@ -90,49 +70,51 @@ export function PortaEntrada() {
         </div>
 
         <div className="space-y-3">
-            <input
-              type="text"
-              value={nome}
-              onChange={e => setNome(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && entrar()}
-              placeholder="seu nome"
-              autoComplete="name"
-              className="w-full rounded-xl border border-[#262626] bg-transparent px-4 py-3.5 text-sm font-archivo text-[#FAFAFA]
-                focus:outline-none focus:border-[#525252] transition-colors placeholder:text-[#525252]"
-            />
-            <input
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && entrar()}
-              placeholder="seu e-mail"
-              autoComplete="email"
-              className="w-full rounded-xl border border-[#262626] bg-transparent px-4 py-3.5 text-sm font-archivo text-[#FAFAFA]
-                focus:outline-none focus:border-[#525252] transition-colors placeholder:text-[#525252]"
-            />
-            <input
-              type="tel"
-              value={telefone}
-              onChange={e => setTelefone(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && entrar()}
-              placeholder="seu telefone com DDD"
-              autoComplete="tel"
-              className="w-full rounded-xl border border-[#262626] bg-transparent px-4 py-3.5 text-sm font-archivo text-[#FAFAFA]
-                focus:outline-none focus:border-[#525252] transition-colors placeholder:text-[#525252]"
-            />
-            <p className="text-[11px] font-archivo text-[#525252] leading-relaxed">
-              Seu e-mail e telefone juntos são sua conta. Use sempre os mesmos para ver seus pedidos.
-            </p>
+          <input
+            type="email"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && fazerLogin()}
+            placeholder="seu e-mail"
+            autoComplete="email"
+            className="w-full rounded-xl border border-[#262626] bg-transparent px-4 py-3.5 text-sm font-archivo text-[#FAFAFA]
+              focus:outline-none focus:border-[#525252] transition-colors placeholder:text-[#525252]"
+          />
+          <input
+            type="tel"
+            value={telefone}
+            onChange={e => setTelefone(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && fazerLogin()}
+            placeholder="seu telefone com DDD"
+            autoComplete="tel"
+            className="w-full rounded-xl border border-[#262626] bg-transparent px-4 py-3.5 text-sm font-archivo text-[#FAFAFA]
+              focus:outline-none focus:border-[#525252] transition-colors placeholder:text-[#525252]"
+          />
+          <p className="text-[11px] font-archivo text-[#525252] leading-relaxed">
+            Entre com o mesmo e-mail e o mesmo telefone que você usou no cadastro.
+          </p>
 
-            {erro && <p className="text-[#E63946] text-xs font-archivo">{erro}</p>}
+          {erro && <p className="text-[#E63946] text-xs font-archivo">{erro}</p>}
 
-            <button
-              onClick={entrar}
-              className="w-full bg-[#FAFAFA] text-[#0A0A0A] font-archivo text-xs font-medium tracking-widest uppercase py-3.5
-                transition-all hover:bg-[#E5E5E5] mt-1"
+          <button
+            onClick={fazerLogin}
+            disabled={loading}
+            className="w-full bg-[#FAFAFA] text-[#0A0A0A] font-archivo text-xs font-medium tracking-widest uppercase py-3.5
+              transition-all hover:bg-[#E5E5E5] disabled:opacity-50 mt-1"
+          >
+            {loading ? 'Entrando...' : 'Entrar'}
+          </button>
+
+          {/* Primeira vez aqui: a conta nasce no cadastro, não no login. */}
+          <p className="text-center text-xs font-archivo text-[#525252] pt-3">
+            Ainda não tem conta?{' '}
+            <Link
+              href="/cadastro"
+              className="text-[#FAFAFA] underline underline-offset-4 decoration-[#525252] hover:decoration-[#FAFAFA] transition-colors"
             >
-              Entrar
-            </button>
+              Cadastrar-se
+            </Link>
+          </p>
         </div>
       </div>
 

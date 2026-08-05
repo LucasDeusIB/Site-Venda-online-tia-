@@ -1,51 +1,53 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
-import { CLIENTE_COOKIE, gerarClienteId, tokenCliente } from '@/lib/sessao-cliente'
+import { clienteAutenticado, encerrarSessao, iniciarSessao } from '@/lib/sessao-cliente'
+import { autenticarConta, buscarConta, somenteDigitos } from '@/lib/data/clientes'
 import { checarOrigem } from '@/lib/mesma-origem'
 import { checarRateLimit } from '@/lib/rate-limit'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const ERRO_LOGIN = 'E-mail ou telefone incorreto.'
 
-// Porta de entrada do cliente: recebe nome + e-mail + telefone, calcula o ID no
-// servidor e devolve um cookie assinado. É o único jeito de obter um token
-// válido — o cliente não consegue forjar o ID de outra pessoa.
+// Login. Não cria conta: o par (e-mail + telefone) precisa existir, gravado no
+// "Cadastrar-se". Se não existir — ou se um dos dois estiver diferente — não
+// entra. É o que fecha o buraco antigo, em que qualquer par digitado virava uma
+// sessão válida.
 export async function POST(req: NextRequest) {
   const bloqueio = checarOrigem(req)
   if (bloqueio) return bloqueio
   const limite = checarRateLimit(req, 'identidade', 15, 60_000)
   if (limite) return limite
 
-  const { nome, email, telefone } = await req.json().catch(() => ({}))
-  if (!nome?.trim()) return NextResponse.json({ erro: 'Informe seu nome' }, { status: 400 })
-  if (!EMAIL_RE.test((email ?? '').trim())) {
-    return NextResponse.json({ erro: 'E-mail inválido' }, { status: 400 })
-  }
-  if ((telefone ?? '').replace(/\D/g, '').length < 10) {
-    return NextResponse.json({ erro: 'Telefone inválido' }, { status: 400 })
+  const { email, telefone } = await req.json().catch(() => ({}))
+  if (!EMAIL_RE.test((email ?? '').trim()) || somenteDigitos(telefone ?? '').length < 10) {
+    // Mesma mensagem do par errado: não entregamos pista de qual campo falhou.
+    return NextResponse.json({ erro: ERRO_LOGIN }, { status: 401 })
   }
 
-  const clienteId = gerarClienteId(email, telefone)
-  const store = await cookies()
-  store.set(CLIENTE_COOKIE, tokenCliente(clienteId), {
-    httpOnly: true,
-    sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
-    path: '/',
-    maxAge: 60 * 60 * 24 * 180,
-  })
+  const conta = await autenticarConta(email, telefone)
+  if (!conta) return NextResponse.json({ erro: ERRO_LOGIN }, { status: 401 })
 
-  return NextResponse.json({
-    clienteId,
-    nome: nome.trim(),
-    email: email.trim().toLowerCase(),
-    telefone: telefone.trim(),
-  })
+  await iniciarSessao(conta.clienteId)
+  return NextResponse.json(conta)
+}
+
+/** Sessão atual (para as telas do cliente conferirem se ainda estão logadas). */
+export async function GET() {
+  const clienteId = await clienteAutenticado()
+  if (!clienteId) return NextResponse.json({ erro: 'Sem sessão' }, { status: 401 })
+
+  // Cookie válido mas conta apagada → derruba a sessão.
+  const conta = await buscarConta(clienteId)
+  if (!conta) {
+    await encerrarSessao()
+    return NextResponse.json({ erro: 'Sem sessão' }, { status: 401 })
+  }
+
+  return NextResponse.json(conta)
 }
 
 export async function DELETE(req: NextRequest) {
   const bloqueio = checarOrigem(req)
   if (bloqueio) return bloqueio
-  const store = await cookies()
-  store.delete(CLIENTE_COOKIE)
+  await encerrarSessao()
   return NextResponse.json({ ok: true })
 }

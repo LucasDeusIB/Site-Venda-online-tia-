@@ -65,3 +65,20 @@ export async function clienteAutenticado(): Promise<string | null> {
   const store = await cookies()
   return verificarToken(store.get(CLIENTE_COOKIE)?.value)
 }
+
+/** Entrega o cookie de sessão — só depois de cadastro ou login conferido. */
+export async function iniciarSessao(clienteId: string): Promise<void> {
+  const store = await cookies()
+  store.set(CLIENTE_COOKIE, tokenCliente(clienteId), {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    path: '/',
+    maxAge: 60 * 60 * 24 * 180,
+  })
+}
+
+export async function encerrarSessao(): Promise<void> {
+  const store = await cookies()
+  store.delete(CLIENTE_COOKIE)
+}

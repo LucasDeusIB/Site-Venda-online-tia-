@@ -1,49 +1,75 @@
-import type { ClienteIdentidade } from './data/types'
+import type { ClienteIdentidade, ContaCliente } from './data/types'
 
 const STORAGE_KEY = 'coreiq_cliente'
 
-// Estabelece a sessão no servidor: manda nome/e-mail/telefone, o servidor calcula
-// o clienteId e devolve um cookie httpOnly assinado. É esse cookie — não o id no
-// localStorage — que autoriza ler/gravar os dados do cliente nas rotas de API.
-export async function estabelecerSessao(dados: {
-  nome: string
-  email: string
-  telefone: string
-}): Promise<{ clienteId: string; nome: string; email: string; telefone: string } | null> {
+// Lado do navegador da conta. A verdade mora no servidor (linha em Cliente +
+// cookie httpOnly assinado); o localStorage é só uma cópia para as telas
+// mostrarem nome/telefone sem esperar a rede. Nada aqui autoriza nada.
+
+export type ResultadoConta =
+  | { ok: true; conta: ContaCliente }
+  | { ok: false; erro: string }
+
+async function postConta(url: string, corpo: unknown): Promise<ResultadoConta> {
   try {
-    const res = await fetch('/api/identidade', {
+    const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(dados),
+      body: JSON.stringify(corpo),
     })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      return { ok: false, erro: data?.erro ?? 'Não deu pra continuar agora. Tente de novo.' }
+    }
+    const conta = data as ContaCliente
+    guardarConta(conta)
+    return { ok: true, conta }
+  } catch {
+    return { ok: false, erro: 'Sem conexão. Tente de novo.' }
+  }
+}
+
+/** Cria a conta (e já entra). */
+export function cadastrar(dados: {
+  nome: string
+  email: string
+  confirmarEmail: string
+  telefone: string
+  confirmarTelefone: string
+}): Promise<ResultadoConta> {
+  return postConta('/api/cadastro', dados)
+}
+
+/** Entra numa conta que já existe. O par tem que bater com o do cadastro. */
+export function entrar(dados: { email: string; telefone: string }): Promise<ResultadoConta> {
+  return postConta('/api/identidade', dados)
+}
+
+/** Conta da sessão atual segundo o servidor, ou null se não está logada. */
+export async function carregarSessao(): Promise<ContaCliente | null> {
+  try {
+    const res = await fetch('/api/identidade')
     if (!res.ok) return null
-    return await res.json()
+    const conta = (await res.json()) as ContaCliente
+    guardarConta(conta)
+    return conta
   } catch {
     return null
   }
 }
 
-// Stable client id derived from the email+phone PAIR — that pair is the account
-// key (see PortaEntrada). Email is lowercased/trimmed, phone reduced to digits,
-// so the same person always resolves to the same id and a different pair is a
-// different account. Pure JS (FNV-1a) so this module is isomorphic and pulls NO
-// Node `crypto` polyfill into the client bundle — it runs only in the browser and
-// just needs to be deterministic, not cryptographic.
-export function gerarClienteId(email: string, telefone: string): string {
-  const seed = `${email.trim().toLowerCase()}:${telefone.replace(/\D/g, '')}`
-  // Two FNV-1a passes with different offsets → wider space, low collision risk.
-  const h1 = fnv1a(seed, 0x811c9dc5)
-  const h2 = fnv1a(seed, 0x01000193)
-  return h1.toString(16).padStart(8, '0') + h2.toString(16).padStart(8, '0')
+export async function sair(): Promise<void> {
+  limparClienteIdentidade()
+  await fetch('/api/identidade', { method: 'DELETE' }).catch(() => {})
 }
 
-function fnv1a(str: string, seed: number): number {
-  let hash = seed >>> 0
-  for (let i = 0; i < str.length; i++) {
-    hash ^= str.charCodeAt(i)
-    hash = Math.imul(hash, 0x01000193)
-  }
-  return hash >>> 0
+function guardarConta(conta: ContaCliente) {
+  setClienteIdentidade({
+    clienteId: conta.clienteId,
+    nome: conta.nome,
+    telefone: conta.telefone,
+    email: conta.email,
+  })
 }
 
 export function getClienteIdentidade(): ClienteIdentidade | null {
@@ -58,23 +84,15 @@ export function getClienteIdentidade(): ClienteIdentidade | null {
 
 export function setClienteIdentidade(id: ClienteIdentidade) {
   if (typeof window === 'undefined') return
-  // Preserve any fields already stored (e.g. the email captured at the front door).
   const atual = getClienteIdentidade()
   localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...atual, ...id }))
 }
 
-// Email is captured at the front door before name/phone exist, so we store it on
-// its own and merge it into the full identity once the client buys or orders.
-const EMAIL_KEY = 'coreiq_email'
-
-export function setClienteEmail(email: string) {
+export function limparClienteIdentidade() {
   if (typeof window === 'undefined') return
-  localStorage.setItem(EMAIL_KEY, email)
-  const atual = getClienteIdentidade()
-  if (atual) localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...atual, email }))
+  localStorage.removeItem(STORAGE_KEY)
 }
 
 export function getClienteEmail(): string {
-  if (typeof window === 'undefined') return ''
-  return getClienteIdentidade()?.email ?? localStorage.getItem(EMAIL_KEY) ?? ''
+  return getClienteIdentidade()?.email ?? ''
 }

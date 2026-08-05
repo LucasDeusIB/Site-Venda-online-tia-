@@ -4,7 +4,7 @@ import type { AbaNotificacao } from '@/lib/data/types'
 import { clienteAutenticado } from '@/lib/sessao-cliente'
 import { checarOrigem } from '@/lib/mesma-origem'
 
-const ABAS_VALIDAS: AbaNotificacao[] = ['ao_vivo', 'pedir', 'minhas_compras']
+const ABAS_VALIDAS: AbaNotificacao[] = ['ao_vivo', 'pedir', 'minhas_compras', 'perguntas']
 
 export async function POST(req: NextRequest) {
   const bloqueio = checarOrigem(req)

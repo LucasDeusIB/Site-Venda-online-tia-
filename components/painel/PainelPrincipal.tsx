@@ -4,7 +4,7 @@ import { useState } from 'react'
 import useSWR from 'swr'
 import { LogOut } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import type { Loja, Produto, Pedido, ReservaCliente, LevaEntrega } from '@/lib/data/types'
+import type { Loja, Produto, Pedido, ReservaCliente, LevaEntrega, Pergunta } from '@/lib/data/types'
 import { SessaoControl } from './SessaoControl'
 import { EntregaManager } from './EntregaManager'
 import { PostagemRapida } from './PostagemRapida'
@@ -12,11 +12,12 @@ import { PedidosPorLoja } from './PedidosPorLoja'
 import { ConfirmacaoPix } from './ConfirmacaoPix'
 import { ProdutosAtivos } from './ProdutosAtivos'
 import { LojasManager } from './LojasManager'
+import { PerguntasStaff } from './PerguntasStaff'
 import { PoweredBy } from '@/components/nav/PoweredBy'
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
 
-type Aba = 'feed' | 'pedidos' | 'pix' | 'lojas' | 'entrega'
+type Aba = 'feed' | 'pedidos' | 'pix' | 'perguntas' | 'lojas' | 'entrega'
 
 export function PainelPrincipal() {
   const [aba, setAba] = useState<Aba>('feed')
@@ -28,6 +29,8 @@ export function PainelPrincipal() {
   const { data: pedidosData, mutate: mutatePedidos } = useSWR<{ pedidos: Pedido[] }>('/api/pedidos', fetcher, { refreshInterval: 8000 })
   const { data: reservasData, mutate: mutateReservas } = useSWR<{ reservas: ReservaCliente[] }>('/api/reservas?pendentes=1', fetcher, { refreshInterval: 8000 })
   const { data: levaData, mutate: mutateLeva } = useSWR<{ leva: LevaEntrega | null }>('/api/leva', fetcher)
+  // Com o cookie de staff, /api/perguntas devolve as conversas de todas as clientes.
+  const { data: perguntasData, mutate: mutatePerguntas } = useSWR<{ perguntas: Pergunta[] }>('/api/perguntas', fetcher, { refreshInterval: 8000 })
 
   const sessao = sessaoData?.sessao ?? null
   const lojas = lojasData?.lojas ?? []
@@ -35,6 +38,9 @@ export function PainelPrincipal() {
   const pedidos = pedidosData?.pedidos ?? []
   const reservasPendentes = reservasData?.reservas ?? []
   const leva = levaData?.leva ?? null
+  const perguntas = perguntasData?.perguntas ?? []
+  // Badge só conta o que está de fato parado esperando a staff.
+  const perguntasSemResposta = perguntas.filter(p => p.mensagens.at(-1)?.autor === 'cliente').length
 
   async function handleLogout() {
     await fetch('/api/auth', { method: 'DELETE' })
@@ -45,6 +51,7 @@ export function PainelPrincipal() {
     { key: 'feed', label: 'Feed' },
     { key: 'pedidos', label: 'Pedidos', badge: pedidos.filter(p => p.status === 'pendente').length || undefined },
     { key: 'pix', label: 'PIX', badge: reservasPendentes.length || undefined },
+    { key: 'perguntas', label: 'Perguntas', badge: perguntasSemResposta || undefined },
     { key: 'lojas', label: 'Lojas' },
     { key: 'entrega', label: 'Entrega' },
   ]
@@ -127,6 +134,10 @@ export function PainelPrincipal() {
           produtos={produtos}
           onUpdate={mutateReservas}
         />
+      )}
+
+      {aba === 'perguntas' && (
+        <PerguntasStaff perguntas={perguntas} onUpdate={mutatePerguntas} />
       )}
 
       {aba === 'lojas' && (

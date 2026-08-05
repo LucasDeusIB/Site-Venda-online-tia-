@@ -6,7 +6,7 @@ export async function GET() {
   // clienteId vem do cookie assinado, nunca da query (evita ler dados de outro).
   const clienteId = await clienteAutenticado()
   if (!clienteId) {
-    return NextResponse.json({ aoVivo: false, pedir: false, minhasCompras: false })
+    return NextResponse.json({ aoVivo: false, pedir: false, minhasCompras: false, perguntas: false })
   }
 
   const notificacoes = await getNotificacoes(clienteId)
