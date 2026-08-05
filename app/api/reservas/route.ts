@@ -3,19 +3,15 @@ import { criarReserva, listarReservasPorCliente, listarReservasPendentes } from 
 import { pixProvider } from '@/lib/payments/pix'
 import { buscarProduto } from '@/lib/data/produtos'
 import { isStaff } from '@/lib/auth-staff'
+import { clienteAutenticado } from '@/lib/sessao-cliente'
+import { checarOrigem } from '@/lib/mesma-origem'
+import { checarRateLimit } from '@/lib/rate-limit'
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
-  const clienteId = searchParams.get('clienteId')
   const pendentes = searchParams.get('pendentes')
 
-  // A client may only read their OWN purchases.
-  if (clienteId) {
-    const reservas = await listarReservasPorCliente(clienteId)
-    return NextResponse.json({ reservas })
-  }
-
-  // Listing all pending purchases is a staff-only view (panel).
+  // Visão da staff: todas as compras pendentes.
   if (pendentes === '1') {
     if (!(await isStaff())) {
       return NextResponse.json({ erro: 'Não autorizado' }, { status: 401 })
@@ -24,17 +20,34 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ reservas })
   }
 
-  return NextResponse.json({ erro: 'Parâmetro obrigatório' }, { status: 400 })
+  // Cliente: só as PRÓPRIAS compras — clienteId vem do cookie assinado, nunca da query.
+  const clienteId = await clienteAutenticado()
+  if (!clienteId) return NextResponse.json({ erro: 'Não autorizado' }, { status: 401 })
+  const reservas = await listarReservasPorCliente(clienteId)
+  return NextResponse.json({ reservas })
 }
 
 export async function POST(req: NextRequest) {
-  const { produtoId, clienteId, clienteNome, clienteTelefone, clienteEmail } = await req.json()
+  const bloqueio = checarOrigem(req)
+  if (bloqueio) return bloqueio
+  const limite = checarRateLimit(req, 'reservas', 20, 60_000)
+  if (limite) return limite
 
-  if (!produtoId || !clienteId || !clienteNome || !clienteTelefone) {
+  const clienteId = await clienteAutenticado()
+  if (!clienteId) return NextResponse.json({ erro: 'Não autorizado' }, { status: 401 })
+
+  const { produtoId, clienteNome, clienteTelefone, clienteEmail } = await req.json().catch(() => ({}))
+  if (!produtoId || !clienteNome?.trim() || !clienteTelefone?.trim()) {
     return NextResponse.json({ erro: 'Dados incompletos' }, { status: 400 })
   }
 
-  const resultado = await criarReserva({ produtoId, clienteId, clienteNome, clienteTelefone, clienteEmail })
+  const resultado = await criarReserva({
+    produtoId,
+    clienteId,
+    clienteNome: clienteNome.trim(),
+    clienteTelefone: clienteTelefone.trim(),
+    clienteEmail: clienteEmail || undefined,
+  })
 
   if (!resultado.ok) {
     return NextResponse.json({ erro: resultado.erro }, { status: 409 })

@@ -4,10 +4,12 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { BRAND } from '@/lib/theme/brand'
 import { PoweredBy } from '@/components/nav/PoweredBy'
-import { gerarClienteId, setClienteIdentidade } from '@/lib/cliente'
+import { estabelecerSessao, setClienteIdentidade } from '@/lib/cliente'
 
-// Not a secret — it only reveals the password field. The real gate is the password.
-const STAFF_KEYWORD = 'Acesso Vendas Staff'
+// Porta do staff: nome "painel staff" (ou só "staff") + o campo de telefone
+// usado como senha do painel. A senha continua verificada no servidor
+// (/api/auth), então o painel segue protegido por cookie httpOnly e rate-limit.
+const STAFF_NOMES = ['painel staff', 'staff']
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export function PortaEntrada() {
@@ -15,17 +17,26 @@ export function PortaEntrada() {
   const [nome, setNome] = useState('')
   const [email, setEmail] = useState('')
   const [telefone, setTelefone] = useState('')
-  const [modoStaff, setModoStaff] = useState(false)
-  const [senha, setSenha] = useState('')
   const [erro, setErro] = useState('')
   const [loading, setLoading] = useState(false)
 
   async function entrar() {
     setErro('')
 
-    // Staff door: the exact keyword typed in the email field reveals the password.
-    if (email.trim() === STAFF_KEYWORD) {
-      setModoStaff(true)
+    // Porta do staff: nome "painel staff"/"staff" + telefone = senha → /painel.
+    if (STAFF_NOMES.includes(nome.trim().toLowerCase())) {
+      setLoading(true)
+      const res = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: telefone.trim() }),
+      }).catch(() => null)
+      setLoading(false)
+      if (res?.ok) {
+        router.push('/painel')
+        return
+      }
+      setErro('Acesso do painel negado.')
       return
     }
 
@@ -42,32 +53,26 @@ export function PortaEntrada() {
       return
     }
 
-    // Identity = email+phone pair. Same pair → same account; different pair → new account.
-    const clienteId = gerarClienteId(email.trim(), telefone.trim())
-    setClienteIdentidade({
-      clienteId,
+    // Identity = email+phone pair. O servidor calcula o id e assina o cookie de
+    // sessão; sem esse cookie, as rotas de cliente não liberam os dados.
+    setLoading(true)
+    const sessao = await estabelecerSessao({
       nome: nome.trim(),
+      email: email.trim(),
       telefone: telefone.trim(),
-      email: email.trim().toLowerCase(),
+    })
+    setLoading(false)
+    if (!sessao) {
+      setErro('Não deu pra entrar agora. Tente de novo.')
+      return
+    }
+    setClienteIdentidade({
+      clienteId: sessao.clienteId,
+      nome: sessao.nome,
+      telefone: sessao.telefone,
+      email: sessao.email,
     })
     router.push('/ao-vivo')
-  }
-
-  async function acessarPainel() {
-    if (!senha.trim()) return
-    setLoading(true)
-    setErro('')
-    const res = await fetch('/api/auth', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password: senha }),
-    })
-    if (res.ok) {
-      router.push('/painel')
-    } else {
-      setErro('Senha incorreta.')
-    }
-    setLoading(false)
   }
 
   return (
@@ -84,8 +89,7 @@ export function PortaEntrada() {
           </p>
         </div>
 
-        {!modoStaff ? (
-          <div className="space-y-3">
+        <div className="space-y-3">
             <input
               type="text"
               value={nome}
@@ -129,41 +133,7 @@ export function PortaEntrada() {
             >
               Entrar
             </button>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            <p className="text-[10px] font-archivo font-medium tracking-widest uppercase text-[#E63946]">
-              Acesso da equipe
-            </p>
-            <input
-              type="password"
-              value={senha}
-              onChange={e => setSenha(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && acessarPainel()}
-              placeholder="senha"
-              autoFocus
-              className="w-full rounded-xl border border-[#262626] bg-transparent px-4 py-3.5 text-sm font-archivo text-[#FAFAFA]
-                focus:outline-none focus:border-[#525252] transition-colors placeholder:text-[#525252]"
-            />
-
-            {erro && <p className="text-[#E63946] text-xs font-archivo">{erro}</p>}
-
-            <button
-              onClick={acessarPainel}
-              disabled={loading}
-              className="w-full bg-[#FAFAFA] text-[#0A0A0A] font-archivo text-xs font-medium tracking-widest uppercase py-3.5
-                transition-all hover:bg-[#E5E5E5] disabled:opacity-50"
-            >
-              {loading ? 'Entrando...' : 'Acessar painel'}
-            </button>
-            <button
-              onClick={() => { setModoStaff(false); setErro(''); setSenha('') }}
-              className="w-full text-[10px] font-archivo tracking-widest uppercase text-[#525252] hover:text-[#A3A3A3] transition-colors py-2"
-            >
-              Voltar
-            </button>
-          </div>
-        )}
+        </div>
       </div>
 
       <div className="absolute bottom-6">

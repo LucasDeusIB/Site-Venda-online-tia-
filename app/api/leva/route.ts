@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getLeva, salvarLeva } from '@/lib/data/leva'
 import type { LevaStatus } from '@/lib/data/types'
+import { isStaff } from '@/lib/auth-staff'
+import { checarOrigem } from '@/lib/mesma-origem'
 
 const STATUS_VALIDOS: LevaStatus[] = ['a_caminho', 'no_brasil', 'saiu_entrega', 'entregue']
 
@@ -10,7 +12,10 @@ export async function GET() {
 }
 
 export async function PUT(req: NextRequest) {
-  const body = await req.json()
+  const bloqueio = checarOrigem(req)
+  if (bloqueio) return bloqueio
+  if (!(await isStaff())) return NextResponse.json({ erro: 'Não autorizado' }, { status: 401 })
+  const body = await req.json().catch(() => ({}))
 
   const status = body.status as LevaStatus
   if (!STATUS_VALIDOS.includes(status)) {

@@ -2,6 +2,27 @@ import type { ClienteIdentidade } from './data/types'
 
 const STORAGE_KEY = 'coreiq_cliente'
 
+// Estabelece a sessão no servidor: manda nome/e-mail/telefone, o servidor calcula
+// o clienteId e devolve um cookie httpOnly assinado. É esse cookie — não o id no
+// localStorage — que autoriza ler/gravar os dados do cliente nas rotas de API.
+export async function estabelecerSessao(dados: {
+  nome: string
+  email: string
+  telefone: string
+}): Promise<{ clienteId: string; nome: string; email: string; telefone: string } | null> {
+  try {
+    const res = await fetch('/api/identidade', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(dados),
+    })
+    if (!res.ok) return null
+    return await res.json()
+  } catch {
+    return null
+  }
+}
+
 // Stable client id derived from the email+phone PAIR — that pair is the account
 // key (see PortaEntrada). Email is lowercased/trimmed, phone reduced to digits,
 // so the same person always resolves to the same id and a different pair is a

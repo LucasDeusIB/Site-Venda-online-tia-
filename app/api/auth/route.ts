@@ -1,27 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-
-async function hashPassword(password: string): Promise<string> {
-  const encoder = new TextEncoder()
-  const data = encoder.encode(password)
-  const hash = await crypto.subtle.digest('SHA-256', data)
-  return Array.from(new Uint8Array(hash))
-    .map(b => b.toString(16).padStart(2, '0'))
-    .join('')
-}
+import { PAINEL_COOKIE, hashPainel, comparaConstante, senhaPainel } from '@/lib/auth-staff'
+import { checarOrigem } from '@/lib/mesma-origem'
+import { checarRateLimit } from '@/lib/rate-limit'
 
 export async function POST(req: NextRequest) {
-  const { password } = await req.json()
-  const expected = process.env.PANEL_PASSWORD ?? 'coreiq2024'
+  const bloqueio = checarOrigem(req)
+  if (bloqueio) return bloqueio
+  // Freio de força-bruta na senha do painel: 5 tentativas por minuto por IP.
+  const limite = checarRateLimit(req, 'auth', 5, 60_000)
+  if (limite) return limite
 
-  if (password !== expected) {
+  const { password } = await req.json().catch(() => ({ password: '' }))
+  const esperada = senhaPainel()
+
+  if (typeof password !== 'string' || !comparaConstante(password, esperada)) {
     return NextResponse.json({ erro: 'Senha incorreta' }, { status: 401 })
   }
 
   const cookieStore = await cookies()
-  cookieStore.set('painel_auth', await hashPassword(expected), {
+  cookieStore.set(PAINEL_COOKIE, await hashPainel(esperada), {
     httpOnly: true,
     sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
     maxAge: 60 * 60 * 24,
     path: '/',
   })
@@ -29,8 +30,10 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ ok: true })
 }
 
-export async function DELETE() {
+export async function DELETE(req: NextRequest) {
+  const bloqueio = checarOrigem(req)
+  if (bloqueio) return bloqueio
   const cookieStore = await cookies()
-  cookieStore.delete('painel_auth')
+  cookieStore.delete(PAINEL_COOKIE)
   return NextResponse.json({ ok: true })
 }

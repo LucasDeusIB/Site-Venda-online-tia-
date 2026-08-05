@@ -1,23 +1,35 @@
 import { cookies } from 'next/headers'
 
-// Server-only check: is the current request authenticated as staff?
-// Mirrors how the cookie is set in app/api/auth/route.ts (SHA-256 of the panel
-// password via Web Crypto, so it stays Edge/Node compatible). Used to gate the
-// staff-only API routes (listing everyone's orders, confirming PIX, etc.) — the
-// proxy.ts middleware only guards the /painel pages, not these handlers.
-async function hashPassword(password: string): Promise<string> {
+export const PAINEL_COOKIE = 'painel_auth'
+
+// Hash do cookie de staff, derivado da senha E do SESSION_SECRET do servidor.
+// Assim, mesmo quem descobrir a senha não forja o cookie sem o segredo, e o valor
+// não é uma função pública apenas da senha. Web Crypto → Edge/Node compatível.
+export async function hashPainel(password: string): Promise<string> {
+  const segredo = process.env.SESSION_SECRET ?? ''
   const encoder = new TextEncoder()
-  const data = encoder.encode(password)
+  const data = encoder.encode(`${segredo}:${password}`)
   const hash = await crypto.subtle.digest('SHA-256', data)
   return Array.from(new Uint8Array(hash))
     .map(b => b.toString(16).padStart(2, '0'))
     .join('')
 }
 
+export function comparaConstante(a: string, b: string): boolean {
+  if (a.length !== b.length) return false
+  let diff = 0
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i)
+  return diff === 0
+}
+
+export function senhaPainel(): string {
+  return process.env.PANEL_PASSWORD ?? '12345'
+}
+
 export async function isStaff(): Promise<boolean> {
   const cookieStore = await cookies()
-  const cookie = cookieStore.get('painel_auth')?.value
+  const cookie = cookieStore.get(PAINEL_COOKIE)?.value
   if (!cookie) return false
-  const expected = await hashPassword(process.env.PANEL_PASSWORD ?? 'coreiq2024')
-  return cookie === expected
+  const expected = await hashPainel(senhaPainel())
+  return comparaConstante(cookie, expected)
 }

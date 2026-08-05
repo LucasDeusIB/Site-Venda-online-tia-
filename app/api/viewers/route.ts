@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/data/db'
 import { buscarSessaoAtiva, atualizarViewerCount } from '@/lib/data/sessoes'
+import { clienteAutenticado } from '@/lib/sessao-cliente'
+import { checarOrigem } from '@/lib/mesma-origem'
 
 const HEARTBEAT_WINDOW_MS = 10_000
 
 export async function POST(req: NextRequest) {
-  const { clienteId } = await req.json()
+  const bloqueio = checarOrigem(req)
+  if (bloqueio) return bloqueio
+  const clienteId = await clienteAutenticado()
   if (!clienteId) return NextResponse.json({ ok: false })
 
   // Upsert heartbeat — one row per clienteId, refreshed timestamp
